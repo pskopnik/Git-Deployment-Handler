@@ -41,20 +41,21 @@ class MySQL(DatabaseConnection):
 		DatabaseConnection.__init__(self, config)
 		self.conn = pymysql.connect(host=config.get("Database", "Host"), port=config.getint("Database", "Port"), user=config.get("Database", "User"), passwd=config.get("Database", "Password"), db=config.get("Database", "Database"))
 		self.cur = self.conn.cursor()
+		self.tableName = config.get("Database", "Table")
 
 	def getAllAprovedCommits(self):
-		self.cur.execute("SELECT `id`, `commit`, `project` FROM `commits` WHERE status='2'")
+		self.cur.execute("SELECT `id`, `commit`, `project` FROM `{0}` WHERE status='2'".format(self.tableName))
 		return self.cur.fetchall()
 	
 	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, project):
 		params = (commitHash, commitAuthor , commitDate, commitMessage, 1, project)
-		self.cur.execute("INSERT INTO `commits` (`commit`, `commiter`, `commitdate`, `message`, `status`, `project`) VALUES (%s, %s, %s, %s, %s, %s)",  params)
+		self.cur.execute("INSERT INTO `{0}` (`commit`, `commiter`, `commitdate`, `message`, `status`, `project`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
 
 	def setStatusWorking(self, commitId):
-		self.cur.execute("UPDATE `commits` SET `status`='3' WHERE `id`=%s",  commitId)
+		self.cur.execute("UPDATE `{0}` SET `status`='3' WHERE `id`=%s".format(self.tableName), commitId)
 
 	def setStatusFinished(self, commitId):
-		self.cur.execute("UPDATE `commits` SET `status`='4' WHERE `id`=%s",  commitId)
+		self.cur.execute("UPDATE `{0}` SET `status`='4' WHERE `id`=%s".format(self.tableName), commitId)
 
 	def __del__(self):
 		self.cur.close()
@@ -66,9 +67,10 @@ class MongoDB(DatabaseConnection):
 		DatabaseConnection.__init__(self, config)
 		self.conn = pymongo.Connection(config.get("Database", "Host"), config.getint("Database", "Port"))
 		self.db = self.conn[config.get("Database", "Database")]
+		self.coll = self.db[config.get("Database", "Collection")]
 
 	def getAllAprovedCommits(self):
-		jsonCommits = self.db.commits.find({"status": 2}, ["commit", "project"])
+		jsonCommits = self.coll.find({"status": 2}, ["commit", "project"])
 		commits = []
 		for jsonCommit in jsonCommits:
 			commits.append([jsonCommit["_id"], jsonCommit["commit"], jsonCommit["project"]])
@@ -76,10 +78,10 @@ class MongoDB(DatabaseConnection):
 
 	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, project):
 		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": 1, "project": project}
-		self.db.commits.insert(commit)
+		self.coll.insert(commit)
 
 	def setStatusWorking(self, commitId):
-		self.db.commits.update({"_id": commitId}, {"$set": {"status": 3}})
+		self.coll.update({"_id": commitId}, {"$set": {"status": 3}})
 
 	def setStatusFinished(self, commitId):
-		self.db.commits.update({"_id": commitId}, {"$set": {"status": 4}})
+		self.coll.update({"_id": commitId}, {"$set": {"status": 4}})
