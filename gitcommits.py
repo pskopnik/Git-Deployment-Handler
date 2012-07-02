@@ -68,10 +68,10 @@ def filterFiles(files, regexp):
             filteredFiles.append(file)
     return filteredFiles
 
-def executePathCommand(command, path):
-    command = command.replace("%f", '"' + path + '"')
+def executePathCommand(command, path, basepath):
+    command = command.replace("${f}", '"' + path + '"')
     args = shlex.split(command)
-    return call(args, stdout=open('/dev/null'), stderr=open('/dev/null'))
+    return call(args, stdout=open('/dev/null'), stderr=open('/dev/null'), cwd=basepath)
 
 def runPostprocessing(path, type, config, sectionname):
     if config.has_option(sectionname, "Postprocessing-" + type):
@@ -83,10 +83,10 @@ def runPostprocessing(path, type, config, sectionname):
             else:
                 configMode = config.get(postprocCommand + "-command", "Mode")
                 if configMode == "once":
-                    executePathCommand(config.get(postprocCommand + "-command", "Command"), path)
+                    executePathCommand(config.get(postprocCommand + "-command", "Command"), path, path)
                 elif configMode == "perfile":
                     files = getAllFiles(path)
                     if config.has_option(postprocCommand + "-command", "RegExp"):
                         files = filterFiles(files, config.get(postprocCommand + "-command", "RegExp"))
                     for file in files:
-                        executePathCommand(config.get(postprocCommand + "-command", "Command"), file)
+                        executePathCommand(config.get(postprocCommand + "-command", "Command"), file, path)
