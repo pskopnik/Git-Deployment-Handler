@@ -29,9 +29,12 @@ class DatabaseConnection(object):
 		pass
 
 	def setStatusWorking(self, commitId, firstStatus):
-		pass
+		self.setStatus(commitId, firstStatus + 1)
 
 	def setStatusFinished(self, commitId, firstStatus):
+		self.setStatus(commitId, firstStatus + 2)
+
+	def setStatus(self, commitId, status):
 		pass
 
 
@@ -51,12 +54,8 @@ class MySQL(DatabaseConnection):
 		params = (commitHash, commitAuthor , commitDate, commitMessage, status, branch)
 		self.cur.execute("INSERT INTO `{0}` (`commit`, `commiter`, `commitdate`, `message`, `status`, `branch`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
 
-	def setStatusWorking(self, commitId, firstStatus):
-		params = (firstStatus + 1, commitId)
-		self.cur.execute("UPDATE `{0}` SET `status`=%s WHERE `id`=%s".format(self.tableName), params)
-
-	def setStatusFinished(self, commitId, firstStatus):
-		params = (firstStatus + 2, commitId)
+	def setStatus(self, commitId, status):
+		params = (status, commitId)
 		self.cur.execute("UPDATE `{0}` SET `status`=%s WHERE `id`=%s".format(self.tableName), params)
 
 	def __del__(self):
@@ -81,11 +80,8 @@ class MongoDB(DatabaseConnection):
 		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": status, "branch": branch}
 		self.coll.insert(commit)
 
-	def setStatusWorking(self, commitId, firstStatus):
-		self.coll.update({"_id": commitId}, {"$set": {"status": firstStatus + 1}})
-
-	def setStatusFinished(self, commitId, firstStatus):
-		self.coll.update({"_id": commitId}, {"$set": {"status": firstStatus + 2}})
+	def setStatus(self, commitId, status):
+		self.coll.update({"_id": commitId}, {"$set": {"status": status}})
 
 	def __del__(self):
 		self.conn.close()
