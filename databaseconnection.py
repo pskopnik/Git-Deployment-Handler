@@ -25,13 +25,13 @@ class DatabaseConnection(object):
 	def getAllAprovedCommits(self):
 		pass
 
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, project):
+	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, branch, status=1):
 		pass
 
-	def setStatusWorking(self, commitId):
+	def setStatusWorking(self, commitId, firstStatus):
 		pass
 
-	def setStatusFinished(self, commitId):
+	def setStatusFinished(self, commitId, firstStatus):
 		pass
 
 
@@ -44,18 +44,20 @@ class MySQL(DatabaseConnection):
 		self.tableName = config.get("Database", "Table")
 
 	def getAllAprovedCommits(self):
-		self.cur.execute("SELECT `id`, `commit`, `project` FROM `{0}` WHERE status='2'".format(self.tableName))
+		self.cur.execute("SELECT `id`, `commit`, `branch`, `status` FROM `{0}` WHERE status='2' OR status='5'".format(self.tableName))
 		return self.cur.fetchall()
 	
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, project):
-		params = (commitHash, commitAuthor , commitDate, commitMessage, 1, project)
-		self.cur.execute("INSERT INTO `{0}` (`commit`, `commiter`, `commitdate`, `message`, `status`, `project`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
+	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, branch, status=1):
+		params = (commitHash, commitAuthor , commitDate, commitMessage, status, branch)
+		self.cur.execute("INSERT INTO `{0}` (`commit`, `commiter`, `commitdate`, `message`, `status`, `branch`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
 
-	def setStatusWorking(self, commitId):
-		self.cur.execute("UPDATE `{0}` SET `status`='3' WHERE `id`=%s".format(self.tableName), commitId)
+	def setStatusWorking(self, commitId, firstStatus):
+		params = (firstStatus + 1, commitId)
+		self.cur.execute("UPDATE `{0}` SET `status`=%s WHERE `id`=%s".format(self.tableName), params)
 
-	def setStatusFinished(self, commitId):
-		self.cur.execute("UPDATE `{0}` SET `status`='4' WHERE `id`=%s".format(self.tableName), commitId)
+	def setStatusFinished(self, commitId, firstStatus):
+		params = (firstStatus + 2, commitId)
+		self.cur.execute("UPDATE `{0}` SET `status`=%s WHERE `id`=%s".format(self.tableName), params)
 
 	def __del__(self):
 		self.cur.close()
@@ -66,22 +68,24 @@ class MongoDB(DatabaseConnection):
 		import pymongo
 		DatabaseConnection.__init__(self, config)
 		self.conn = pymongo.Connection(config.get("Database", "Host"), config.getint("Database", "Port"))
-		self.db = self.conn[config.get("Database", "Database")]
-		self.coll = self.db[config.get("Database", "Collection")]
+		self.coll = self.conn[config.get("Database", "Database")][config.get("Database", "Collection")]
 
 	def getAllAprovedCommits(self):
-		jsonCommits = self.coll.find({"status": 2}, ["commit", "project"])
+		jsonCommits = self.coll.find({"$or": [{"status": 2}, {"status": 5}]}, ["commit", "branch", "status"])
 		commits = []
 		for jsonCommit in jsonCommits:
-			commits.append([jsonCommit["_id"], jsonCommit["commit"], jsonCommit["project"]])
+			commits.append([jsonCommit["_id"], jsonCommit["commit"], jsonCommit["branch"], jsonCommit["status"]])
 		return commits
 
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, project):
-		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": 1, "project": project}
+	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, branch, status=1):
+		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": status, "branch": branch}
 		self.coll.insert(commit)
 
-	def setStatusWorking(self, commitId):
-		self.coll.update({"_id": commitId}, {"$set": {"status": 3}})
+	def setStatusWorking(self, commitId, firstStatus):
+		self.coll.update({"_id": commitId}, {"$set": {"status": firstStatus + 1}})
 
-	def setStatusFinished(self, commitId):
-		self.coll.update({"_id": commitId}, {"$set": {"status": 4}})
+	def setStatusFinished(self, commitId, firstStatus):
+		self.coll.update({"_id": commitId}, {"$set": {"status": firstStatus + 2}})
+
+	def __del__(self):
+		self.conn.close()

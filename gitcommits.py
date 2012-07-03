@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
+import os, git, shlex, re
 from subprocess import call, CalledProcessError
 from syslog import syslog, LOG_ERR
 from configparser import ConfigParser
-import shlex
-import re
 
 def deleteDirContent(dir):
     for the_file in os.listdir(dir):
@@ -34,10 +32,10 @@ def deleteDir(dir):
     except Exception as e:
         print(e)
 
-def deleteUpdateRepo(path, repositoryname, branch, commit=None):
+def deleteUpdateRepo(path, repositoryname, branch, repositoriesDir, commit=None):
     path = path.rstrip("/ ")
     deleteDirContent(path)
-    args = ('git', 'clone', '-q', '-l', '-s', '-b', branch, 'file:///srv/gitosis/repositories/' + repositoryname + '.git', os.path.basename(path))
+    args = ('git', 'clone', '-q', '-l', '-s', '-b', branch, 'file://' + os.path.join(repositoriesDir, repositoryname + '.git'), os.path.basename(path))
     returncode = call(args, cwd=os.path.dirname(path), stdout=open('/dev/null'), stderr=open('/dev/null'))
     if returncode != 0:
         syslog(LOG_ERR, "Git return code after pulling is '{0}', branch '{1}'".format(returncode, branch))
@@ -51,7 +49,6 @@ def deleteUpdateRepo(path, repositoryname, branch, commit=None):
         if returncode != 0:
             syslog(LOG_ERR, "Git return code after resetting to head is '{0}', branch '{1}'".format(returncode, branch))
 
-
 def getAllFiles(path):
     allFiles = list()
     pathcontent = os.walk(path)
@@ -64,19 +61,19 @@ def filterFiles(files, regexp):
     filteredFiles = list()
     regexp = re.compile(regexp)
     for file in files:
-        if regexp.match(file):
+        if not regexp.search(file) == None:
             filteredFiles.append(file)
     return filteredFiles
 
 def executePathCommand(command, path, basepath):
-    command = command.replace("${f}", '"' + path + '"')
+    command = command.replace("${f}", "'" + path + "'")
     args = shlex.split(command)
     return call(args, stdout=open('/dev/null'), stderr=open('/dev/null'), cwd=basepath)
 
-def runPostprocessing(path, type, config, sectionname):
-    if config.has_option(sectionname, "Postprocessing-" + type):
-        postprocCommandString = config.get(sectionname, "Postprocessing-" + type)
-        postprocCommands = postprocCommandString .split(" ")
+def runPostprocessing(path, config, sectionname):
+    if config.has_option(sectionname, "Postprocessing"):
+        postprocCommandString = config.get(sectionname, "Postprocessing")
+        postprocCommands = postprocCommandString.split(" ")
         for postprocCommand in postprocCommands:
             if not config.has_section(postprocCommand + "-command"):
                 syslog(LOG_ERR, "Command '{0}' doesn't exist".format(postprocCommand))
@@ -90,3 +87,12 @@ def runPostprocessing(path, type, config, sectionname):
                         files = filterFiles(files, config.get(postprocCommand + "-command", "RegExp"))
                     for file in files:
                         executePathCommand(config.get(postprocCommand + "-command", "Command"), file, path)
+
+def getAndInsertCommits(config, branch, firstcommit, lastcommit, dbCon, status=1):
+    gC = git.Git(config.get(branch, "Repositoryname"), repositoriesDir=config.get("Git", "RepositoriesDir"))
+    commits = gC.getLog(firstcommit, lastcommit)
+    for commit in commits:
+        commitMessage = commit.getMessage()
+        if len(commitMessage) > 300:
+            commitMessage = commitMessage[:297] + "..."
+        dbCon.insertCommit(commit.getHash(), commit.getAuthor() , commit.getDate(), commitMessage, branch, status)
