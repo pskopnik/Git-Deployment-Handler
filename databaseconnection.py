@@ -77,7 +77,7 @@ class MongoDB(DatabaseConnection):
 		return commits
 
 	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, repository, branch, status=1):
-		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": status, "repository": repository, branch": branch}
+		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": status, "repository": repository, "branch": branch}
 		self.coll.insert(commit)
 
 	def setStatus(self, commitId, status):
