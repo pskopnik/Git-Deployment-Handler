@@ -95,4 +95,4 @@ def getAndInsertCommits(config, branch, firstcommit, lastcommit, dbCon, status=1
         commitMessage = commit.getMessage()
         if len(commitMessage) > 300:
             commitMessage = commitMessage[:297] + "..."
-        dbCon.insertCommit(commit.getHash(), commit.getAuthor() , commit.getDate(), commitMessage, branch, status)
+        dbCon.insertCommit(commit.getHash(), commit.getAuthor() , commit.getDate(), commitMessage, config.get(branch, "Repositoryname"), branch, status)

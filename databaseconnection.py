@@ -25,7 +25,7 @@ class DatabaseConnection(object):
 	def getAllAprovedCommits(self):
 		pass
 
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, branch, status=1):
+	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, repository, branch, status=1):
 		pass
 
 	def setStatusWorking(self, commitId, firstStatus):
@@ -50,9 +50,9 @@ class MySQL(DatabaseConnection):
 		self.cur.execute("SELECT `id`, `commit`, `branch`, `status` FROM `{0}` WHERE status='2' OR status='5'".format(self.tableName))
 		return self.cur.fetchall()
 	
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, branch, status=1):
-		params = (commitHash, commitAuthor , commitDate, commitMessage, status, branch)
-		self.cur.execute("INSERT INTO `{0}` (`commit`, `commiter`, `commitdate`, `message`, `status`, `branch`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
+	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, repository, branch, status=1):
+		params = (commitHash, commitAuthor , commitDate, commitMessage, status, repository, branch)
+		self.cur.execute("INSERT INTO `{0}` (`commit`, `commiter`, `commitdate`, `message`, `status`, `repository`, `branch`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
 
 	def setStatus(self, commitId, status):
 		params = (status, commitId)
@@ -76,8 +76,8 @@ class MongoDB(DatabaseConnection):
 			commits.append([jsonCommit["_id"], jsonCommit["commit"], jsonCommit["branch"], jsonCommit["status"]])
 		return commits
 
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, branch, status=1):
-		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": status, "branch": branch}
+	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, repository, branch, status=1):
+		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": status, "repository": repository, branch": branch}
 		self.coll.insert(commit)
 
 	def setStatus(self, commitId, status):

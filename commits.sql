@@ -7,6 +7,7 @@ CREATE TABLE `commits` (
   `approver` int(11) NOT NULL,
   `approvedate` int(11) NOT NULL,
   `status` int(11) NOT NULL,
+  `repository` varchar(200) NOT NULL,
   `branch` varchar(200) NOT NULL,
   PRIMARY KEY (`id`)
 )
