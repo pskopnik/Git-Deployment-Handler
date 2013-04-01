@@ -32,7 +32,7 @@ Postprocessing = customscript
 #[website-dev]
 #Repositoryname = example
 #Path = /var/www/example_dev/
-#DatabaseOnly = True
+#CronDepl = True
 
 [crunch-command]
 Mode = perfile

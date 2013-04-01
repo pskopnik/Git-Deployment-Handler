@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from configparser import ConfigParser
-
+from copy import copy
 
 class DatabaseConnection(object):
 	@staticmethod
@@ -10,7 +10,7 @@ class DatabaseConnection(object):
 		if config == None:
 			config = ConfigParser()
 			config.read("config.ini")
-		dbEngine = config.get("Database", "Engine")
+		dbEngine = config["Database"]["Engine"]
 		if dbEngine == "mysql":
 			db = MySQL(config)
 		elif dbEngine == "mongodb":
@@ -22,19 +22,22 @@ class DatabaseConnection(object):
 	def __init__(self, config):
 		self.config = config
 
-	def getAllAprovedCommits(self):
+	def getQueuedCommits(self):
 		pass
 
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, repository, branch, status=1):
+	def getAllCommits(self):
 		pass
 
-	def setStatusWorking(self, commitId, firstStatus):
-		self.setStatus(commitId, firstStatus + 1)
+	def insertCommit(self, commit):
+		pass
 
-	def setStatusFinished(self, commitId, firstStatus):
-		self.setStatus(commitId, firstStatus + 2)
+	def setStatusWorking(self, commit):
+		self.setStatus(commit, commit.status[:commit.status.rfind('_')] + '_working')
 
-	def setStatus(self, commitId, status):
+	def setStatusFinished(self, commit):
+		self.setStatus(commit, commit.status[:commit.status.rfind('_')] + '_finished')
+
+	def setStatus(self, commit, status):
 		pass
 
 
@@ -42,21 +45,35 @@ class MySQL(DatabaseConnection):
 	def __init__(self, config):
 		import pymysql
 		DatabaseConnection.__init__(self, config)
-		self.conn = pymysql.connect(host=config.get("Database", "Host"), port=config.getint("Database", "Port"), user=config.get("Database", "User"), passwd=config.get("Database", "Password"), db=config.get("Database", "Database"))
+		confSection = config["Database"]
+		self.conn = pymysql.connect(host=confSection["Host"], port=config.getint("Database", "Port"), user=confSection["User"], passwd=confSection["Password"], db=confSection["Database"])
 		self.cur = self.conn.cursor()
-		self.tableName = config.get("Database", "Table")
+		self.tableName = config["Database"]["Table"]
 
-	def getAllAprovedCommits(self):
-		self.cur.execute("SELECT `id`, `commit`, `branch`, `status` FROM `{0}` WHERE status='2' OR status='5'".format(self.tableName))
-		return self.cur.fetchall()
-	
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, repository, branch, status=1):
-		params = (commitHash, commitAuthor , commitDate, commitMessage, status, repository, branch)
-		self.cur.execute("INSERT INTO `{0}` (`commit`, `commiter`, `commitdate`, `message`, `status`, `repository`, `branch`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
+	def getQueuedCommits(self):
+		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status` `approver`, `approverdate` FROM `{0}` WHERE status LIKE '%\_queued'".format(self.tableName))
+		commits = []
+		for dbCommit in self.cur.fetchall():
+			commit = GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9])
+		return commits
 
-	def setStatus(self, commitId, status):
-		params = (status, commitId)
-		self.cur.execute("UPDATE `{0}` SET `status`=%s WHERE `id`=%s".format(self.tableName), params)
+	def getAllCommits(self):
+		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status` `approver`, `approverdate` FROM `{0}`".format(self.tableName))
+		commits = []
+		for dbCommit in self.cur.fetchall():
+			commit = GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9])
+		return commits
+
+	def insertCommit(self, commit):
+		params = (commit.hash, commit.author, commit.date, commit.message, commit.status, commit.repository, commit.branch)
+		self.cur.execute("INSERT INTO `{0}` (`hash`, `author`, `date`, `message`, `status`, `repository`, `branch`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
+		commit.id = self.cur.lastrowid
+
+	def setStatus(self, commit, status):
+		commit.status = status
+		if hasattr(commit, "id") and commit.id != None:
+			params = (status, commit.id)
+			self.cur.execute("UPDATE `{0}` SET `status`=%s WHERE `id`=%s".format(self.tableName), params)
 
 	def __del__(self):
 		self.cur.close()
@@ -66,22 +83,34 @@ class MongoDB(DatabaseConnection):
 	def __init__(self, config):
 		import pymongo
 		DatabaseConnection.__init__(self, config)
-		self.conn = pymongo.Connection(config.get("Database", "Host"), config.getint("Database", "Port"))
-		self.coll = self.conn[config.get("Database", "Database")][config.get("Database", "Collection")]
+		confSection = config["Database"]
+		self.conn = pymongo.Connection(confSection["Host"], config.getint("Database", "Port"))
+		self.coll = self.conn[confSection["Database"]][confSection["Collection"]]
 
-	def getAllAprovedCommits(self):
-		jsonCommits = self.coll.find({"$or": [{"status": 2}, {"status": 5}]}, ["commit", "branch", "status"])
+	def getQueuedCommits(self):
+		jsonCommits = self.coll.find({"status": {"$regex": "_queued$"}}, ["_id", "hash", "author", "date", "message", "branch", "repository", "status", "approver", "approverDate"])
 		commits = []
 		for jsonCommit in jsonCommits:
-			commits.append([jsonCommit["_id"], jsonCommit["commit"], jsonCommit["branch"], jsonCommit["status"]])
+			commits.append(GitCommit(dbCommit["hash"], dbCommit["author"], dbCommit["date"], dbCommit["message"], dbCommit["branch"], dbCommit["repository"], id=dbCommit["_id"], status=dbCommit["status"], approver=dbCommit["approver"], approverDate=dbCommit["approverDate"]))
 		return commits
 
-	def insertCommit(self, commitHash, commitAuthor, commitDate, commitMessage, repository, branch, status=1):
-		commit = {"commit": commitHash, "commiter": commitAuthor, "commitdate": commitDate, "message": commitMessage, "status": status, "repository": repository, "branch": branch}
-		self.coll.insert(commit)
+	def getAllCommits(self):
+		jsonCommits = self.coll.find({}, ["_id", "hash", "author", "date", "message", "branch", "repository", "status", "approver", "approverDate"])
+		commits = []
+		for jsonCommit in jsonCommits:
+			commits.append(GitCommit(dbCommit["hash"], dbCommit["author"], dbCommit["date"], dbCommit["message"], dbCommit["branch"], dbCommit["repository"], id=dbCommit["_id"], status=dbCommit["status"], approver=dbCommit["approver"], approverDate=dbCommit["approverDate"]))
+		return commits
 
-	def setStatus(self, commitId, status):
-		self.coll.update({"_id": commitId}, {"$set": {"status": status}})
+	def insertCommit(self, commit):
+		jsonCommit = copy(commit)
+		del jsonCommit.id
+		self.coll.insert(jsonCommit)
+		commit.id = jsonCommit._id
+
+	def setStatus(self, commit, status):
+		commit.status = status
+		if hasattr(commit, "id") and commit.id != None:
+			self.coll.update({"_id": commit.id}, {"$set": {"status": status}})
 
 	def __del__(self):
 		self.conn.close()

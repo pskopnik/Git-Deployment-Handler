@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import sys, os, os.path, importlib
+from configparser import ConfigParser
+from databaseconnection import DatabaseConnection
+
+if sys.argv[0] == "-c":
+	configFile = sys.argv[1]
+	action = sys.argv[2]
+	args = sys.argv[3:]
+else:
+	configFile = "config.ini"
+	action = sys.argv[0]
+	args = sys.argv[1:]
+
+
+if not os.path.isfile(configFile):
+	syslog(LOG_INFO, "Couldn't find config file '{0}'".format(configFile))
+	exit(1)
+
+config = ConfigParser()
+config.read(configFile)
+
+dbCon = DatabaseConnection.getDatabaseConnection(config=config)
+
+modules = __import__("modules")
+enabledModules = []
+
+for file in os.listdir('modules'):
+	if not file in ("__init__.py", "module.py") and os.path.isfile("modules/" + file) and os.path.splitext(file)[1] == ".py":
+		moduleName = os.path.splitext(file)[0]
+		module = importlib.import_module("modules." + moduleName)
+		for moduleAttr in dir(module):
+			if moduleAttr.lower() == moduleName:
+				moduleClass = getattr(module, moduleAttr)
+				module = moduleClass(config, args, dbCon)
+				if module.isEnabled(action):
+					enabledModules.append(module)
+
+commits = []
+
+for module in enabledModules:
+	commits = commits + module.source()
+
+for module in enabledModules:
+	module.preProcessing(commits)
+
+for module in enabledModules:
+	module.processing(commits)
+
+for module in enabledModules:
+	module.postProcessing(commits)
