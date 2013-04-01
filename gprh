@@ -5,14 +5,14 @@ import sys, os, os.path, importlib
 from configparser import ConfigParser
 from databaseconnection import DatabaseConnection
 
-if sys.argv[0] == "-c":
-	configFile = sys.argv[1]
-	action = sys.argv[2]
-	args = sys.argv[3:]
+if sys.argv[1] == "-c":
+	configFile = sys.argv[2]
+	action = sys.argv[3]
+	args = sys.argv[4:]
 else:
 	configFile = "config.ini"
-	action = sys.argv[0]
-	args = sys.argv[1:]
+	action = sys.argv[1]
+	args = sys.argv[2:]
 
 
 if not os.path.isfile(configFile):
