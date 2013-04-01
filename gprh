@@ -41,7 +41,9 @@ for file in os.listdir('modules'):
 commits = []
 
 for module in enabledModules:
-	commits = commits + module.source()
+	newCommits = module.source()
+	if newCommits != None:
+		commits = commits + module.source()
 
 for module in enabledModules:
 	module.preProcessing(commits)
