@@ -4,7 +4,7 @@ CREATE TABLE `commits` (
   `author` varchar(200) NOT NULL,
   `date` int(11) NOT NULL,
   `message` text NOT NULL,
-  `approver` int(11) NOT NULL,
+  `approver` varchar(200) NOT NULL,
   `approvedate` int(11) NOT NULL,
   `status` varchar(50) NOT NULL,
   `repository` varchar(200) NOT NULL,
