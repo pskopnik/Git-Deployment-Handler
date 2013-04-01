@@ -102,8 +102,9 @@ class MongoDB(DatabaseConnection):
 		return commits
 
 	def insertCommit(self, commit):
-		jsonCommit = copy(commit)
-		del jsonCommit.id
+		commitCopy = copy(commit)
+		del commitCopy.id
+		jsonCommit = commitCopy.__dict__
 		self.coll.insert(jsonCommit)
 		commit.id = jsonCommit._id
 
