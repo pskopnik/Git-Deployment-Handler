@@ -106,7 +106,7 @@ class MongoDB(DatabaseConnection):
 		del commitCopy.id
 		jsonCommit = commitCopy.__dict__
 		self.coll.insert(jsonCommit)
-		commit.id = jsonCommit._id
+		commit.id = jsonCommit['_id']
 
 	def setStatus(self, commit, status):
 		commit.status = status
