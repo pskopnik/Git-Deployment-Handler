@@ -9,7 +9,7 @@ class PostProcessing(Module):
 
 	def postProcessing(self, commits):
 		for commit in commits:
-			if commit.has_key("debug") and commit.debug:
+			if hasattr(commit, "deployed") and commit.deployed:
 				self.runPostprocessing(commit)
 
 	def runPostprocessing(self, commit):
