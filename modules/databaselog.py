@@ -5,7 +5,7 @@ class DatabaseLog(Module):
 	def isEnabled(self, action):
 		return (action == "postreceive")
 
-	def preProcessing(self, commmits):
+	def preProcessing(self, commits):
 		for commit in commits:
 			if "DatabaseLog" in self.conf[commit.branch] and self.conf.getboolean(commit.branch, "DatabaseLog"):
 				commit.status = "databaselog_queued"
