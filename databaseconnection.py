@@ -3,6 +3,7 @@
 
 from configparser import ConfigParser
 from copy import copy
+from git import GitCommit
 
 class DatabaseConnection(object):
 	@staticmethod
