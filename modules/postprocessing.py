@@ -23,7 +23,7 @@ class PostProcessing(Module):
 				else:
 					commandSection = self.conf[postprocCommand + "-command"]
 					configMode = commandSection["Mode"]
-					path = self.conf[commit.branch]
+					path = self.conf[commit.branch]["Path"]
 					if configMode == "once":
 						self.executePathCommand(commandSection["Command"], path, path)
 					elif configMode == "perfile":
