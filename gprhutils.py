@@ -62,8 +62,8 @@ def mInsertOnStatus(status, dbCon, commits):
 
 
 def insertOnStatus(status, dbCon, commit):
-		if commit.status == status and (not hasattr(commit, "id") or commit.id == None):
-			dbCon.insert(commit)
+		if commit.status == status:
+			insertCommit(dbCon, commit)
 
 
 def filterOnStatusBase(statusBase, commits):
