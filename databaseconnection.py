@@ -92,14 +92,14 @@ class MongoDB(DatabaseConnection):
 		jsonCommits = self.coll.find({"status": {"$regex": "_queued$"}}, ["_id", "hash", "author", "date", "message", "branch", "repository", "status", "approver", "approverDate"])
 		commits = []
 		for jsonCommit in jsonCommits:
-			commits.append(GitCommit(dbCommit["hash"], dbCommit["author"], dbCommit["date"], dbCommit["message"], dbCommit["branch"], dbCommit["repository"], id=dbCommit["_id"], status=dbCommit["status"], approver=dbCommit["approver"], approverDate=dbCommit["approverDate"]))
+			commits.append(GitCommit(jsonCommit["hash"], jsonCommit["author"], jsonCommit["date"], jsonCommit["message"], jsonCommit["branch"], jsonCommit["repository"], id=jsonCommit["_id"], status=jsonCommit["status"], approver=jsonCommit["approver"], approverDate=jsonCommit["approverDate"]))
 		return commits
 
 	def getAllCommits(self):
 		jsonCommits = self.coll.find({}, ["_id", "hash", "author", "date", "message", "branch", "repository", "status", "approver", "approverDate"])
 		commits = []
 		for jsonCommit in jsonCommits:
-			commits.append(GitCommit(dbCommit["hash"], dbCommit["author"], dbCommit["date"], dbCommit["message"], dbCommit["branch"], dbCommit["repository"], id=dbCommit["_id"], status=dbCommit["status"], approver=dbCommit["approver"], approverDate=dbCommit["approverDate"]))
+			commits.append(GitCommit(jsonCommit["hash"], jsonCommit["author"], jsonCommit["date"], jsonCommit["message"], jsonCommit["branch"], jsonCommit["repository"], id=jsonCommit["_id"], status=jsonCommit["status"], approver=jsonCommit["approver"], approverDate=jsonCommit["approverDate"]))
 		return commits
 
 	def insertCommit(self, commit):
