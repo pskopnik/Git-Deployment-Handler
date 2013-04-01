@@ -4,7 +4,7 @@ import gprhutils
 
 class Deployment(Module):
 	def isEnabled(self, action):
-		return true
+		return True
 
 	def processing(self, commits):
 		for commit in commits:

@@ -5,7 +5,7 @@ from syslog import syslog, LOG_ERR
 
 class PostProcessing(Module):
 	def isEnabled(self, action):
-		return true
+		return True
 
 	def postProcessing(self, commits):
 		for commit in commits:
