@@ -7,7 +7,7 @@ class Approval(Module):
 
 	def preProcessing(self, commits):
 		for commit in commits:
-			if "Approval" in self.conf[branch] and self.conf.getboolean(branch, "Approval"):
+			if "Approval" in self.conf[commit.branch] and self.conf.getboolean(commit.branch, "Approval"):
 				commit.status = "approval"
 
 	def processing(self, commits):
