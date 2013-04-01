@@ -43,7 +43,7 @@ commits = []
 for module in enabledModules:
 	newCommits = module.source()
 	if newCommits != None:
-		commits = commits + module.source()
+		commits += module.source()
 
 for module in enabledModules:
 	module.preProcessing(commits)
