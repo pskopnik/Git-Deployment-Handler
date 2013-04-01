@@ -12,5 +12,5 @@ class Deployment(Module):
 				self.dbCon.setStatusWorking(commit)
 				confSection = self.conf[commit.branch]
 				syslog(LOG_INFO, "Pulling git for '{0}'".format(commit.branch))
-				gprhutils.deleteUpdateRepo(confSection["Path"], confSection["Repositoryname"], branch, self.conf["Git"]["RepositoriesDir"])
+				gprhutils.deleteUpdateRepo(confSection["Path"], confSection["Repositoryname"], commit.branch, self.conf["Git"]["RepositoriesDir"])
 				self.dbCon.setStatusFinished(commit)
