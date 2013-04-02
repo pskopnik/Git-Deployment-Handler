@@ -67,7 +67,7 @@ class MySQL(DatabaseConnection):
 
 	def insertCommit(self, commit):
 		params = (commit.hash, commit.author, commit.date, commit.message, commit.status, commit.repository, commit.branch)
-		self.cur.execute("INSERT INTO `{0}` (`hash`, `author`, `date`, `message`, `status`, `repository`, `branch`) VALUES (%s, %s, %s, %s, %s, %s)".format(self.tableName), params)
+		self.cur.execute("INSERT INTO `{0}` (`hash`, `author`, `date`, `message`, `status`, `repository`, `branch`) VALUES (%s, %s, %s, %s, %s, %s, %s)".format(self.tableName), params)
 		commit.id = self.cur.lastrowid
 
 	def setStatus(self, commit, status):
