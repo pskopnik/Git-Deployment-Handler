@@ -76,6 +76,7 @@ class MySQL(DatabaseConnection):
 		if hasattr(commit, "id") and commit.id != None:
 			params = (status, commit.id)
 			self.cur.execute("UPDATE `{0}` SET `status`=%s WHERE `id`=%s".format(self.tableName), params)
+			self.cur.connection.commit()
 
 	def __del__(self):
 		self.cur.close()
