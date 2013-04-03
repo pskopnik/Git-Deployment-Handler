@@ -52,7 +52,7 @@ class MySQL(DatabaseConnection):
 		self.tableName = config["Database"]["Table"]
 
 	def getQueuedCommits(self):
-		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status` `approver`, `approverdate` FROM `{0}` WHERE status LIKE '%\_queued' ORDER BY `date` ASC".format(self.tableName))
+		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status`, `approver`, `approverdate` FROM `{0}` WHERE status LIKE '%\_queued' ORDER BY `date` ASC".format(self.tableName))
 		commits = []
 		for dbCommit in self.cur.fetchall():
 			commit = GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9])
