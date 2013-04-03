@@ -9,7 +9,7 @@ class CronDeployment(Module):
 		for commit in commits:
 			if "CronDeployment" in self.conf[commit.branch] and self.conf.getboolean(commit.branch, "CronDeployment"):
 				commit.status = "crondepl_queued"
-				commit.preventDepl = False
+				commit.preventDepl = True
 
 	def processing(self, commits):
 		gprhutils.mInsertOnStatus("crondepl_queued", self.dbCon, commits)
