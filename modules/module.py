@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 class Module(object):
 	def __init__(self, conf, args, dbCon):
 		self.conf = conf

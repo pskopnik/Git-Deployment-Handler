@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
+
 from modules.module import Module
-import gprhutils
+import gitdhutils
 
 class CronDeployment(Module):
 	def isEnabled(self, action):
@@ -12,4 +14,4 @@ class CronDeployment(Module):
 				commit.preventDepl = True
 
 	def processing(self, commits):
-		gprhutils.mInsertOnStatus("crondepl_queued", self.dbCon, commits)
+		gitdhutils.mInsertOnStatus("crondepl_queued", self.dbCon, commits)

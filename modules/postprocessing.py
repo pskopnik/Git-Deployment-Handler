@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from modules.module import Module
 import shlex, re, os
 from subprocess import call, CalledProcessError

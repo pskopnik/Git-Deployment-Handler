@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
+
 from modules.module import Module
-import gprhutils
+import gitdhutils
 
 class DatabaseLog(Module):
 	def isEnabled(self, action):
@@ -11,5 +13,5 @@ class DatabaseLog(Module):
 				commit.status = "databaselog_queued"
 
 	def processing(self, commits):
-		commits = gprhutils.filterOnStatusBase("databaselog", commits)
-		gprhutils.mInsertCommit(self.dbCon, commits)
+		commits = gitdhutils.filterOnStatusBase("databaselog", commits)
+		gitdhutils.mInsertCommit(self.dbCon, commits)

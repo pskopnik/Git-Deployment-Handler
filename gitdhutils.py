@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 from subprocess import call, CalledProcessError
 from syslog import syslog, LOG_ERR

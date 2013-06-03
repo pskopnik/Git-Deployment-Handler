@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
+
 from modules.module import Module
-import gprhutils
+import gitdhutils
 
 class Approval(Module):
 	def isEnabled(self, action):
@@ -11,4 +13,4 @@ class Approval(Module):
 				commit.status = "approval"
 
 	def processing(self, commits):
-		gprhutils.mInsertOnStatus("approval", self.dbCon, commits)
+		gitdhutils.mInsertOnStatus("approval", self.dbCon, commits)

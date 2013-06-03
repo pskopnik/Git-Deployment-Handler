@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
+
 from modules.module import Module
 from syslog import syslog, LOG_ERR, LOG_INFO
-import gprhutils
+import gitdhutils
 
 class Deployment(Module):
 	def isEnabled(self, action):
@@ -12,6 +14,6 @@ class Deployment(Module):
 				self.dbCon.setStatusWorking(commit)
 				confSection = self.conf[commit.branch]
 				syslog(LOG_INFO, "Pulling commit '{0}'' for branch '{1}'".format(commit.hash, commit.branch))
-				gprhutils.deleteUpdateRepo(confSection["Path"], confSection["Repositoryname"], commit.branch, self.conf["Git"]["RepositoriesDir"])
+				gitdhutils.deleteUpdateRepo(confSection["Path"], confSection["Repositoryname"], commit.branch, self.conf["Git"]["RepositoriesDir"])
 				self.dbCon.setStatusFinished(commit)
 				commit.deployed = True

@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from configparser import ConfigParser
 from copy import copy
 from git import GitCommit
 
