@@ -3,53 +3,74 @@
 
 import sys, os, os.path, importlib
 from configparser import ConfigParser
-from databaseconnection import DatabaseBackend
+from databasebackend import DatabaseBackend
 
-if sys.argv[1] == "-c":
-	configFile = sys.argv[2]
-	action = sys.argv[3]
-	args = sys.argv[4:]
-else:
-	configFile = "config.ini"
-	action = sys.argv[1]
-	args = sys.argv[2:]
+def printHelp():
+	print(
+"""	Git Deployment Handler
+Usage:
+        git-dh [--help] -c <file> <action>
+Parameters:
+        action - context of the script: 'post-receive' or 'cron' 
+Options:
+        -c     - path of configuration file
+        -h     - shortcut for --help
+        --help - print this message and exit""")
+	exit(0)
+
+def cliMain():
+	if len(sys.argv) < 2 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
+		printHelp()
+
+	if sys.argv[1] == "-c":
+		configFile = sys.argv[2]
+		action = sys.argv[3]
+		args = sys.argv[4:]
 
 
-if not os.path.isfile(configFile):
-	syslog(LOG_INFO, "Couldn't find config file '{0}'".format(configFile))
-	exit(1)
+	if not os.path.isfile(configFile):
+		syslog(LOG_INFO, "Couldn't find config file '{0}'".format(configFile))
+		exit(1)
 
-config = ConfigParser()
-config.read(configFile)
+	gitDhMain(configFile, action, args)
 
-dbBe = DatabaseBackend.getDatabaseBackend(config=config)
 
-modules = __import__("modules")
-enabledModules = []
+def gitDhMain(configFile, action, args, dbBe=None):
+	config = ConfigParser()
+	config.read(configFile)
 
-for file in os.listdir('modules'):
-	if not file in ("__init__.py", "module.py") and os.path.isfile("modules/" + file) and os.path.splitext(file)[1] == ".py":
-		moduleName = os.path.splitext(file)[0]
-		module = importlib.import_module("modules." + moduleName)
-		for moduleAttr in dir(module):
-			if moduleAttr.lower() == moduleName:
-				moduleClass = getattr(module, moduleAttr)
-				module = moduleClass(config, args, dbBe)
-				if module.isEnabled(action):
-					enabledModules.append(module)
+	if dbBe == None:
+		dbBe = DatabaseBackend.getDatabaseBackend(config=config)
 
-commits = []
+	modules = __import__("modules")
+	enabledModules = []
 
-for module in enabledModules:
-	newCommits = module.source()
-	if newCommits != None:
-		commits += module.source()
+	for file in os.listdir('modules'):
+		if not file in ("__init__.py", "module.py") and os.path.isfile("modules/" + file) and os.path.splitext(file)[1] == ".py":
+			moduleName = os.path.splitext(file)[0]
+			module = importlib.import_module("modules." + moduleName)
+			for moduleAttr in dir(module):
+				if moduleAttr.lower() == moduleName:
+					moduleClass = getattr(module, moduleAttr)
+					module = moduleClass(config, args, dbBe)
+					if module.isEnabled(action):
+						enabledModules.append(module)
 
-for module in enabledModules:
-	module.preProcessing(commits)
+	commits = []
 
-for module in enabledModules:
-	module.processing(commits)
+	for module in enabledModules:
+		newCommits = module.source()
+		if newCommits != None:
+			commits += module.source()
 
-for module in enabledModules:
-	module.postProcessing(commits)
+	for module in enabledModules:
+		module.preProcessing(commits)
+
+	for module in enabledModules:
+		module.processing(commits)
+
+	for module in enabledModules:
+		module.postProcessing(commits)
+
+if __name__ == "__main__":
+	cliMain()
