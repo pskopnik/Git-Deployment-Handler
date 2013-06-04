@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from modules.module import Module
+from gitdh.modules.module import Module
 from syslog import syslog, LOG_ERR, LOG_INFO
-import gitdhutils
+import gitdh.gitdhutils
 
 class Deployment(Module):
 	def isEnabled(self, action):

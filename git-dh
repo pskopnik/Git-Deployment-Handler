@@ -1,76 +1,45 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import sys, os, os.path, importlib
-from configparser import ConfigParser
-from databasebackend import DatabaseBackend
+from gitdh.gitdh import gitDhMain
+import sys, os.path
 
-def printHelp():
+def printHelp(exitValue=0):
 	print(
-"""	Git Deployment Handler
+"""	Git Deployment Handler v0.5
 Usage:
-        git-dh [--help] -c <file> <action>
+        git-dh [--help] <configfile> <action> [args...]
 Parameters:
-        action - context of the script: 'post-receive' or 'cron' 
+        configfile - path to the config file
+        action     - context of the script, see below
+        args       - additional arguments dependent on the action
 Options:
-        -c     - path of configuration file
-        -h     - shortcut for --help
-        --help - print this message and exit""")
-	exit(0)
+        -h         - shortcut for --help
+        --help     - print this message and exit
+Actions:
+    post-receive   - 
+        
+    cron           - 
+        """)
+	exit(exitValue)
 
 def cliMain():
-	if len(sys.argv) < 2 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
-		printHelp()
+	if len(sys.argv) >= 2 and (sys.argv[1] == "-h" or sys.argv[1] == "--help"):
+		printHelp(1)
 
-	if sys.argv[1] == "-c":
-		configFile = sys.argv[2]
-		action = sys.argv[3]
-		args = sys.argv[4:]
+	if len(sys.argv) < 3:
+		print("Missing parameters, try {0} --help".format(sys.argv[0]))
+		exit(1)
 
+	configFile = sys.argv[1]
+	action = sys.argv[2]
+	args = sys.argv[3:]
 
-	if not os.path.isfile(configFile):
+	if not os.path.isfile(configSFile):
 		syslog(LOG_INFO, "Couldn't find config file '{0}'".format(configFile))
 		exit(1)
 
 	gitDhMain(configFile, action, args)
-
-
-def gitDhMain(configFile, action, args, dbBe=None):
-	config = ConfigParser()
-	config.read(configFile)
-
-	if dbBe == None:
-		dbBe = DatabaseBackend.getDatabaseBackend(config=config)
-
-	modules = __import__("modules")
-	enabledModules = []
-
-	for file in os.listdir('modules'):
-		if not file in ("__init__.py", "module.py") and os.path.isfile("modules/" + file) and os.path.splitext(file)[1] == ".py":
-			moduleName = os.path.splitext(file)[0]
-			module = importlib.import_module("modules." + moduleName)
-			for moduleAttr in dir(module):
-				if moduleAttr.lower() == moduleName:
-					moduleClass = getattr(module, moduleAttr)
-					module = moduleClass(config, args, dbBe)
-					if module.isEnabled(action):
-						enabledModules.append(module)
-
-	commits = []
-
-	for module in enabledModules:
-		newCommits = module.source()
-		if newCommits != None:
-			commits += module.source()
-
-	for module in enabledModules:
-		module.preProcessing(commits)
-
-	for module in enabledModules:
-		module.processing(commits)
-
-	for module in enabledModules:
-		module.postProcessing(commits)
 
 if __name__ == "__main__":
 	cliMain()

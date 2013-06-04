@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import copy
-from git import GitCommit
+from gitdh.git import GitCommit
 
 class DatabaseBackend(object):
 	@staticmethod

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from modules.module import Module
+from gitdh.modules.module import Module
 import shlex, re, os
 from subprocess import call, CalledProcessError
 from syslog import syslog, LOG_ERR

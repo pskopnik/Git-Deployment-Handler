@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from modules.module import Module
+from gitdh.modules.module import Module
 
 class DatabaseSource(Module):
 	def isEnabled(self, action):

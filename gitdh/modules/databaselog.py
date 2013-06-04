@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from modules.module import Module
-import gitdhutils
+from gitdh.modules.module import Module
+import gitdh.gitdhutils
 
 class DatabaseLog(Module):
 	def isEnabled(self, action):
