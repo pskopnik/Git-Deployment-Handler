@@ -3,9 +3,9 @@
 from copy import copy
 from git import GitCommit
 
-class DatabaseConnection(object):
+class DatabaseBackend(object):
 	@staticmethod
-	def getDatabaseConnection(config=None):
+	def getDatabaseBackend(config=None):
 		if config == None:
 			config = ConfigParser()
 			config.read("config.ini")
@@ -40,10 +40,10 @@ class DatabaseConnection(object):
 		pass
 
 
-class MySQL(DatabaseConnection):
+class MySQL(DatabaseBackend):
 	def __init__(self, config):
 		import pymysql
-		DatabaseConnection.__init__(self, config)
+		DatabaseBackend.__init__(self, config)
 		confSection = config["Database"]
 		self.conn = pymysql.connect(host=confSection["Host"], port=config.getint("Database", "Port"), user=confSection["User"], passwd=confSection["Password"], db=confSection["Database"])
 		self.cur = self.conn.cursor()
@@ -80,10 +80,10 @@ class MySQL(DatabaseConnection):
 		self.cur.close()
 		self.conn.close()
 
-class MongoDB(DatabaseConnection):
+class MongoDB(DatabaseBackend):
 	def __init__(self, config):
 		import pymongo
-		DatabaseConnection.__init__(self, config)
+		DatabaseBackend.__init__(self, config)
 		confSection = config["Database"]
 		self.conn = pymongo.Connection(confSection["Host"], config.getint("Database", "Port"))
 		self.coll = self.conn[confSection["Database"]][confSection["Collection"]]

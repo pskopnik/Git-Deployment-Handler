@@ -14,4 +14,4 @@ class DatabaseLog(Module):
 
 	def processing(self, commits):
 		commits = gitdhutils.filterOnStatusBase("databaselog", commits)
-		gitdhutils.mInsertCommit(self.dbCon, commits)
+		gitdhutils.mInsertCommit(self.dbBe, commits)

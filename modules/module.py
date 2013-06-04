@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 class Module(object):
-	def __init__(self, conf, args, dbCon):
+	def __init__(self, conf, args, dbBe):
 		self.conf = conf
 		self.args = args
-		self.dbCon = dbCon
+		self.dbBe = dbBe
 
 	def isEnabled(self, action):
 		pass

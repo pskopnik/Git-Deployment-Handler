@@ -14,4 +14,4 @@ class CronDeployment(Module):
 				commit.preventDepl = True
 
 	def processing(self, commits):
-		gitdhutils.mInsertOnStatus("crondepl_queued", self.dbCon, commits)
+		gitdhutils.mInsertOnStatus("crondepl_queued", self.dbBe, commits)

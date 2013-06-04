@@ -13,4 +13,4 @@ class Approval(Module):
 				commit.status = "approval"
 
 	def processing(self, commits):
-		gitdhutils.mInsertOnStatus("approval", self.dbCon, commits)
+		gitdhutils.mInsertOnStatus("approval", self.dbBe, commits)

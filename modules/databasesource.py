@@ -7,4 +7,4 @@ class DatabaseSource(Module):
 		return (action == "cron")
 
 	def source(self):
-		return self.dbCon.getQueuedCommits()
+		return self.dbBe.getQueuedCommits()

@@ -3,7 +3,7 @@
 
 import sys, os, os.path, importlib
 from configparser import ConfigParser
-from databaseconnection import DatabaseConnection
+from databaseconnection import DatabaseBackend
 
 if sys.argv[1] == "-c":
 	configFile = sys.argv[2]
@@ -22,7 +22,7 @@ if not os.path.isfile(configFile):
 config = ConfigParser()
 config.read(configFile)
 
-dbCon = DatabaseConnection.getDatabaseConnection(config=config)
+dbBe = DatabaseBackend.getDatabaseBackend(config=config)
 
 modules = __import__("modules")
 enabledModules = []
@@ -34,7 +34,7 @@ for file in os.listdir('modules'):
 		for moduleAttr in dir(module):
 			if moduleAttr.lower() == moduleName:
 				moduleClass = getattr(module, moduleAttr)
-				module = moduleClass(config, args, dbCon)
+				module = moduleClass(config, args, dbBe)
 				if module.isEnabled(action):
 					enabledModules.append(module)
 

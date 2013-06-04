@@ -48,24 +48,24 @@ def deleteUpdateRepo(path, repositoryname, branch, repositoriesDir, commit=None)
 			syslog(LOG_ERR, "Git return code after resetting to head is '{0}', branch '{1}'".format(returncode, branch))
 
 
-def mInsertCommit(dbCon, commits):
+def mInsertCommit(dbBe, commits):
 	for commit in commits:
-		insertCommit(dbCon, commit)
+		insertCommit(dbBe, commit)
 
 
-def insertCommit(dbCon, commit):
+def insertCommit(dbBe, commit):
 	if not hasattr(commit, "id") or commit.id == None:
-		dbCon.insertCommit(commit)
+		dbBe.insertCommit(commit)
 
 
-def mInsertOnStatus(status, dbCon, commits):
+def mInsertOnStatus(status, dbBe, commits):
 	for commit in commits:
-		insertOnStatus(status, dbCon, commit)
+		insertOnStatus(status, dbBe, commit)
 
 
-def insertOnStatus(status, dbCon, commit):
+def insertOnStatus(status, dbBe, commit):
 		if commit.status == status:
-			insertCommit(dbCon, commit)
+			insertCommit(dbBe, commit)
 
 
 def filterOnStatusBase(statusBase, commits):
