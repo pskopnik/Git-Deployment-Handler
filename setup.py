@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from distutils.core import setup
 
@@ -11,5 +12,5 @@ setup(
 		url='https://github.com/seoester/Git-Deployment-Handler',
 		package_dir={'gitdh': 'src', 'gitdh.modules': 'src/modules'},
 		packages=['gitdh', 'gitdh.modules'],
-		scripts=['git-dh'],
+		scripts=['git-dh', 'git-dh-pr'],
 	 )

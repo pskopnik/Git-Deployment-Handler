@@ -2,14 +2,20 @@
 
 import shlex
 from subprocess import check_output, CalledProcessError
-import os.path
-import re
+import os.path, re
 
 class Git(object):
-	def __init__(self, repositoryName, repositoriesDir='/srv/gitosis/repositories'):
-		self.repositoryName = repositoryName
-		self.repositoriesDir = repositoriesDir
-		repositoryDir = os.path.join(self.repositoriesDir, repositoryName + '.git')
+	def __init__(self, repositoryName=None, repositoriesDir='/srv/gitosis/repositories', repositoryDir=None):
+		if repositoryName != None:
+			self.repositoryName = repositoryName
+			self.repositoriesDir = repositoriesDir
+			repositoryDir = os.path.join(self.repositoriesDir, repositoryName + '.git')
+		elif repositoryDir != None:
+			self.repositoryName = os.path.basename(repositoryDir).split('.git')[0]
+			self.repositoriesDir = os.path.abspath(os.path.join(repositoryDir, os.pardir))
+		else:
+			raise GitException("Git.__init__() either needs repositoryName and repositoriesDir or repositoryDir")
+
 		if os.path.isdir(repositoryDir) != True:
 			raise GitException("Repository directory does not exist")
 		self.repositoryDir = repositoryDir
@@ -67,6 +73,13 @@ class Git(object):
 				fileType = 2
 			files.append(GitTreeNode(fileType, os.path.join(directory, fileName), branch, self))
 		return files
+
+	def getBranches():
+		branchOutput = self._executeGitCommand("branch", "")
+		branchPattern = re.compile(r"[\*\s]\s(\S+)$", re.MULTILINE)
+		return branchPattern.findall(branchOutput)
+
+
 
 
 class GitTreeNode(object):
