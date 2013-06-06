@@ -1,0 +1,10 @@
+#!/bin/sh
+
+configFile=''
+
+while read oldrev newrev refname
+do
+	git-dh $configFile post-receive $oldrev $newrev $refname
+done
+
+exit 0
