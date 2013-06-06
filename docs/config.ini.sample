@@ -15,7 +15,7 @@ Table = commits
 #Collection = commits
 
 [Git]
-RepositoriesDir = /srv/gitosis/repositories/
+RepositoriesDir = /var/lib/gitolite/repositories/
 
 [website]
 Repositoryname = example
