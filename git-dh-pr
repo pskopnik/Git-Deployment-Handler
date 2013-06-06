@@ -32,7 +32,7 @@ if not "gitdh" in gC.getBranches():
 gFile = None
 
 for file in gC.getFiles(branch="gitdh"):
-	if file.getFileName() == "gitdh.conf"
+	if file.getFileName() == "gitdh.conf":
 		gFile = file
 		break
 if gFile == None:
@@ -46,9 +46,9 @@ try:
 	while True:
 		rawInput = input()
 		gitdh.gitDhMain(tmpConfigFile.name, "post-receive", rawInput.split(" "))
-except EOFError, e:
+except EOFError:
 	pass
-except Exception, e:
+except Exception:
 	raise
 
 tmpConfigFile.close()

@@ -74,7 +74,7 @@ class Git(object):
 			files.append(GitTreeNode(fileType, os.path.join(directory, fileName), branch, self))
 		return files
 
-	def getBranches():
+	def getBranches(self):
 		branchOutput = self._executeGitCommand("branch", "")
 		branchPattern = re.compile(r"[\*\s]\s(\S+)$", re.MULTILINE)
 		return branchPattern.findall(branchOutput)
