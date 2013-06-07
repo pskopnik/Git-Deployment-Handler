@@ -9,21 +9,21 @@ def gitDhMain(configFile, action, args, dbBe=None, repositoryName=None, reposito
 	config = ConfigParser()
 	config.read(configFile)
 
-	if "Repositoryname" in config["Git"] and config["Git"]["Repositoryname"] == "AUTO":
+	if "RepositoryName" in config["Git"] and config["Git"]["RepositoryName"] == "AUTO":
 		if repositoryName == None:
-			raise Exception("Git::Repositoryname == 'AUTO' and no repositoryname given")
-		config["Git"]["Repositoryname"] = repositoryName
+			raise Exception("Git::RepositoryName == 'AUTO' and no repositoryname given")
+		config["Git"]["RepositoryName"] = repositoryName
 
 	if "RepositoriesDir" in config["Git"] and config["Git"]["RepositoriesDir"] == "AUTO":
 		if repositoryName == None:
 			raise Exception("Git::RepositoriesDir == 'AUTO' and no repositoryname given")
 		config["Git"]["RepositoriesDir"] = repositoriesDir
 
-	if "Repositoryname" in config["Git"]:
+	if "RepositoryName" in config["Git"]:
 		for section in config:
 			if not section in ["Git", "DEFAULT", "Database"] and not ("-" in section and section[section.rfind('-') + 1:] == "command"):
-				if not "Repositoryname" in config[section]:
-					config[section]["Repositoryname"] = config["Git"]["Repositoryname"]
+				if not "RepositoryName" in config[section]:
+					config[section]["RepositoryName"] = config["Git"]["RepositoryName"]
 
 	if dbBe == None:
 		dbBe = DatabaseBackend.getDatabaseBackend(config=config)

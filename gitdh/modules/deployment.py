@@ -14,6 +14,6 @@ class Deployment(Module):
 				self.dbBe.setStatusWorking(commit)
 				confSection = self.conf[commit.branch]
 				syslog(LOG_INFO, "Pulling commit '{0}'' for branch '{1}'".format(commit.hash, commit.branch))
-				gitdhutils.deleteUpdateRepo(confSection["Path"], confSection["Repositoryname"], commit.branch, self.conf["Git"]["RepositoriesDir"])
+				gitdhutils.deleteUpdateRepo(confSection["Path"], confSection["RepositoryName"], commit.branch, self.conf["Git"]["RepositoriesDir"])
 				self.dbBe.setStatusFinished(commit)
 				commit.deployed = True

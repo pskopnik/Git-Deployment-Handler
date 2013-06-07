@@ -16,29 +16,32 @@ Table = commits
 
 [Git]
 RepositoriesDir = /var/lib/gitolite/repositories/
+RepositoryName = example
+#RepositoriesDir = AUTO
+#RepositoryName = AUTO
 
 [website]
-Repositoryname = example
+RepositoryName = example
 Path = /var/www/example/
 Approval = True
 Postprocessing = customscript crunch
 
 [website-dev]
-Repositoryname = example
+RepositoryName = example
 Path = /var/www/example_dev/
 DatabaseLog = True
 Postprocessing = customscript
 
 #[website-dev]
-#Repositoryname = example
+#RepositoryName = example
 #Path = /var/www/example_dev/
 #CronDeployment = True
 
 [crunch-command]
 Mode = perfile
 RegExp = \.php$
-command = eff_php_crunch ${f}
+Command = eff_php_crunch ${f}
 
 [customscript-command]
 Mode = once
-command = ${f}/custom.sh
+Command = ${f}/custom.sh
