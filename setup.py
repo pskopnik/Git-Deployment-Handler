@@ -9,6 +9,7 @@ setup(
 		description='Git Deployment Handler',
 		author='Seoester',
 		author_email='seoester@googlemail.com',
+		license='MIT',
 		url='https://github.com/seoester/Git-Deployment-Handler',
 		packages=['gitdh', 'gitdh.modules'],
 		scripts=['git-dh', 'git-dh-pr'],
