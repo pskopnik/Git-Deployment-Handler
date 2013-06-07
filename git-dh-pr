@@ -30,7 +30,6 @@ if not "gitdh" in gC.getBranches():
 
 
 gFile = None
-
 for file in gC.getFiles(branch="gitdh"):
 	if file.getFileName() == "gitdh.conf":
 		gFile = file
@@ -40,12 +39,12 @@ if gFile == None:
 
 tmpConfigFile = NamedTemporaryFile()
 tmpConfigFile.write(gFile.getFileContent().encode())
-
+tmpConfigFile.flush()
 
 try:
 	while True:
 		rawInput = input()
-		gitdh.gitDhMain(tmpConfigFile.name, "post-receive", rawInput.split(" "))
+		gitdh.gitDhMain(tmpConfigFile.name, "postreceive", rawInput.split(" "))
 except EOFError:
 	pass
 except Exception:

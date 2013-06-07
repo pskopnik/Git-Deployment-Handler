@@ -17,7 +17,7 @@ Options:
         -h         - shortcut for --help
         --help     - print this message and exit
 Actions:
-    post-receive   - 
+    postreceive    - 
         
     cron           - 
         """)

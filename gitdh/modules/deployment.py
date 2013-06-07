@@ -2,7 +2,7 @@
 
 from gitdh.modules.module import Module
 from syslog import syslog, LOG_ERR, LOG_INFO
-import gitdh.gitdhutils
+from gitdh import gitdhutils
 
 class Deployment(Module):
 	def isEnabled(self, action):

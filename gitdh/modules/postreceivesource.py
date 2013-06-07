@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from gitdh.modules.module import Module
-import git
+from gitdh import git
 from syslog import syslog, LOG_ERR, LOG_INFO
 
 class PostReceiveSource(Module):

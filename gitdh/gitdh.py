@@ -12,13 +12,16 @@ def gitDhMain(configFile, action, args, dbBe=None):
 	if dbBe == None:
 		dbBe = DatabaseBackend.getDatabaseBackend(config=config)
 
-	modules = __import__("modules")
+	gitdh = __import__("gitdh.modules")
+	modules = gitdh.modules
 	enabledModules = []
 
-	for file in os.listdir('modules'):
-		if not file in ("__init__.py", "module.py") and os.path.isfile("modules/" + file) and os.path.splitext(file)[1] == ".py":
+	modulesDir = os.path.join(os.path.dirname(__file__), 'modules')
+	for file in os.listdir(modulesDir):
+		filePath = os.path.join(modulesDir, file)
+		if not file in ("__init__.py", "module.py") and os.path.isfile(filePath) and os.path.splitext(file)[1] == ".py":
 			moduleName = os.path.splitext(file)[0]
-			module = importlib.import_module("modules." + moduleName)
+			module = importlib.import_module("gitdh.modules." + moduleName)
 			for moduleAttr in dir(module):
 				if moduleAttr.lower() == moduleName:
 					moduleClass = getattr(module, moduleAttr)

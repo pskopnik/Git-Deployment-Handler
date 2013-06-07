@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from gitdh.modules.module import Module
-import gitdh.gitdhutils
+from gitdh import gitdhutils
 
 class CronDeployment(Module):
 	def isEnabled(self, action):
