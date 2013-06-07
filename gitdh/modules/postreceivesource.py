@@ -23,7 +23,7 @@ class PostReceiveSource(Module):
 			syslog(LOG_ERR, "No section in config for branch '{0}'".format(branch))
 			return []
 
-		gitRepo = git.Git(self.conf[branch]["Repositoryname"], repositoriesDir=self.conf["Git"]["RepositoriesDir"])
+		gitRepo = git.Git(repositoryName=self.conf[branch]["Repositoryname"], repositoriesDir=self.conf["Git"]["RepositoriesDir"])
 		commits = gitRepo.getLog(since=firstCommit, until=lastCommit, branch=branch)
 
 		for commit in commits:

@@ -22,7 +22,11 @@ if len(sys.argv) >= 2 and sys.argv[1] == "--install":
 	exit(0)
 
 hooksPath = os.path.dirname(os.path.abspath(__file__))
-repositoryDir=os.path.abspath(os.path.join(hooksPath, os.pardir))
+repositoryDir = os.path.abspath(os.path.join(hooksPath, os.pardir))
+repositoriesDir = os.path.abspath(os.path.join(repositoryDir, os.pardir))
+repositoryName = os.path.basename(repositoryDir)
+if repositoryName.rfind(".git") == len(repositoryName) - 4:
+	repositoryName = repositoryName[:len(repositoryName) - 4]
 gC = git.Git(repositoryDir=repositoryDir)
 
 if not "gitdh" in gC.getBranches():
@@ -44,7 +48,7 @@ tmpConfigFile.flush()
 try:
 	while True:
 		rawInput = input()
-		gitdh.gitDhMain(tmpConfigFile.name, "postreceive", rawInput.split(" "))
+		gitdh.gitDhMain(tmpConfigFile.name, "postreceive", rawInput.split(" "), repositoryName=repositoryName, repositoriesDir=repositoriesDir)
 except EOFError:
 	pass
 except Exception:
