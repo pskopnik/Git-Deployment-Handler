@@ -4,7 +4,7 @@ configFile=''
 
 while read oldrev newrev refname
 do
-	git-dh $configFile post-receive $oldrev $newrev $refname
+	git-dh $configFile postreceive $oldrev $newrev $refname
 done
 
 exit 0
