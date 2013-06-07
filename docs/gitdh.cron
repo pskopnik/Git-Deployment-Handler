@@ -1,0 +1,7 @@
+# /etc/cron.d/gitdh: Cron file for gitdh to check its database
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+
+*/5 * * * *       www-data    git-dh cron /var/lib/gitolite/gitdh_website.conf
+
