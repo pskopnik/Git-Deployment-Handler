@@ -14,14 +14,14 @@ Requirements
 
 -  python3.2
 -  *Either*
--  mysql and PyMySQL
--  mongodb and pymongo
+  -  mysql and PyMySQL
+  -  mongodb and pymongo
 
 Installation
 ------------
 
-The easiest way to install gitdh is to use the Python Package Index
-(available tomorrow):
+The easiest way to install gitdh is to use the Python Package
+Index:
 
 ::
 

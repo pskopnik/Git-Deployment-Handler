@@ -14,7 +14,7 @@ It uses the git post-receive hook and a cron job (only needed for the approval s
 
 ##Installation
 
-The easiest way to install gitdh is to use the Python Package Index (available tomorrow):
+The easiest way to install gitdh is to use the Python Package Index:
 
     # pip install gitdh
 
