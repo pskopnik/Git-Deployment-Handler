@@ -78,15 +78,15 @@ class MySQL(DatabaseBackend):
 
 	def __del__(self):
 		self.cur.close()
-		self.conn.close()
+		self.client.close()
 
 class MongoDB(DatabaseBackend):
 	def __init__(self, config):
 		import pymongo
 		DatabaseBackend.__init__(self, config)
 		confSection = config["Database"]
-		self.conn = pymongo.Connection(confSection["Host"], config.getint("Database", "Port"))
-		self.coll = self.conn[confSection["Database"]][confSection["Collection"]]
+		self.client = pymongo.MongoClient(host=confSection["Host"], port=config.getint("Database", "Port"))
+		self.coll = self.client[confSection["Database"]][confSection["Collection"]]
 
 	def getQueuedCommits(self):
 		jsonCommits = self.coll.find({"status": {"$regex": "_queued$"}}, ["_id", "hash", "author", "date", "message", "branch", "repository", "status", "approver", "approverDate"]).sort("date")
@@ -115,4 +115,4 @@ class MongoDB(DatabaseBackend):
 			self.coll.update({"_id": commit.id}, {"$set": {"status": status}})
 
 	def __del__(self):
-		self.conn.close()
+		self.client.disconnect()
