@@ -30,10 +30,15 @@ def deleteDir(dir):
 	except Exception as e:
 		print(e)
 
-def deleteUpdateRepo(path, repositoryname, branch, repositoriesDir, commit=None):
+def deleteUpdateRepo(path, repositoryDir, branch, commit=None, rmIntGitFiles=True):
 	path = path.rstrip("/ ")
-	deleteDirContent(path)
-	args = ('git', 'clone', '-q', '-l', '-s', '-b', branch, 'file://' + os.path.join(repositoriesDir, repositoryname + '.git'), os.path.basename(path))
+	if not os.path.exists(path):
+		os.mkdir(path)
+	else:
+		if not os.path.isdir(path):
+			raise Exception("'{0}' is not a directory".format(path))
+		deleteDirContent(path)
+	args = ('git', 'clone', '-q', '-l', '-s', '-b', branch, 'file://' + repositoryDir, os.path.basename(path))
 	returncode = call(args, cwd=os.path.dirname(path), stdout=open('/dev/null'), stderr=open('/dev/null'))
 	if returncode != 0:
 		syslog(LOG_ERR, "Git return code after pulling is '{0}', branch '{1}'".format(returncode, branch))
@@ -46,6 +51,10 @@ def deleteUpdateRepo(path, repositoryname, branch, repositoriesDir, commit=None)
 		returncode = call(args, cwd=path, stdout=open('/dev/null'), stderr=open('/dev/null'))
 		if returncode != 0:
 			syslog(LOG_ERR, "Git return code after resetting to head is '{0}', branch '{1}'".format(returncode, branch))
+	if rmIntGitFiles:
+		deleteDir(os.path.join(path, '.git'))
+		if os.path.isfile(os.path.join(path), '.gitignore'):
+			os.unlink(os.path.join(path), '.gitignore')
 
 
 def mInsertCommit(dbBe, commits):
