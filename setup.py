@@ -16,7 +16,7 @@ setup(
 		license='MIT',
 		url='https://github.com/seoester/Git-Deployment-Handler',
 		packages=['gitdh', 'gitdh.modules'],
-		scripts=['git-dh', 'git-dh-pr'],
+		scripts=['git-dh', 'git-dh-pr', 'git-dh-cron'],
 		classifiers=[
 			'Development Status :: 4 - Beta',
 			'License :: OSI Approved :: MIT License',
