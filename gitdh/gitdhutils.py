@@ -82,3 +82,12 @@ def filterOnStatusExt(statusExt, commits):
 		if '_' in commit.status and commit.status[commit.status.rfind('_') + 1:] == statusExt:
 			filteredCommits.append(commit)
 	return filteredCommits
+
+def getExePath(file):
+	"""Similar to the UNIX command `which`, but returns the whole file path, not just the directory."""
+	for directory in os.environ["PATH"].split(':'):
+		filePath = os.path.join(directory, file)
+		if os.path.exists(filePath) and os.path.isfile(filePath):
+			return filePath
+	raise Exception("File not found")
+
