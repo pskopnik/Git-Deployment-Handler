@@ -6,7 +6,7 @@ import sys, os.path
 
 def printHelp(exitValue=0):
 	print(
-"""	Git Deployment Handler v0.5
+"""	Git Deployment Handler v0.51
 Usage:
         git-dh [--help] <configfile> <action> [args...]
 Parameters:

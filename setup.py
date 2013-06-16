@@ -8,7 +8,7 @@ with open('README.rst') as file:
 
 setup(
 		name='gitdh',
-		version='0.5',
+		version='0.51',
 		description='Git Deployment Handler using post-receive hooks, supports approval and logging of commits',
 		long_description=long_description,
 		author='Seoester',
