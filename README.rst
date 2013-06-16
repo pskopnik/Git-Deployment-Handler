@@ -14,8 +14,8 @@ Requirements
 
 -  python3.2
 -  *Either*
-  -  mysql and PyMySQL
-  -  mongodb and pymongo
+-  mysql and PyMySQL
+-  mongodb and pymongo
 
 Installation
 ------------
