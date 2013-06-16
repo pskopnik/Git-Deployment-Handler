@@ -64,14 +64,16 @@ For every branch which should be deployed by gitdh a new section has to be creat
     [master]
     # Deploy to /var/www_dev
     Path = /var/www_dev/
+    # RepositoryName can be omitted when set in the Git section
     RepositoryName = website
 
-Other options are:
+The other available options are:
 
  * `DatabaseLog` - `True` or `False`, whether every commit should be logged to the database
  * `CronDeployment` - `True` or `False`, whether every commit should be inserted into the database and deployed by cron job instead of deploying it directly, e.g. when permissions aren't available
  * `Approval` - `True` or `False`, whether every commit has to be first approved in the database and is then deployed by cron job
  * `Postprocessing` - space separated list of commands which should be performed onto the deployed files
+ * `RmGitIntFiles` - `True` or `False`, whether internal git files should be deleted (.git/ and .gitignore); default `True`
 
 ###Commands
 
@@ -101,9 +103,11 @@ The post-receive hook can be set up automatically with the `git-dh-pr` command:
     # cd /var/lib/gitolite/repositories/website.git/hooks
     # git-dh-pr --install
 
-After the setup with `git-dh-pr` the `gitdh.conf` file in the `gitdh` branch is automatically used as the configuration file. *Unfortunately this setup doesn't support cron _yet_, please check tomorrow again.*
+After the setup with `git-dh-pr` the `gitdh.conf` file in the `gitdh` branch is automatically used as the configuration file. The `git-dh-pr` command can also create the post-receive hook in another directory and with another name:
 
-A static setup still can be used, see docs/post-receive.static for an example.
+    # git-dh-pr --install --name hooks/post-receive.gitdh
+
+A static setup still can be used, see docs/post-receive.static as an example. A file like docs/post-receive.static has to be created with the name `post-receive` in the hooks/ directory of the git repository.
 
 ##`cron` Setup
 
@@ -111,5 +115,9 @@ To perform cron database checks, the `git-dh` has to be called with the `cron` a
 
     git-dh <configfile> cron
 
+If the setup is stored in a `gitdh.conf` file in the `gitdh` branch of an repository the `git-dh-cron` command has to be used.
+
+    git-dh-cron <repository directory>...
+
 To automate this, a cron file can be created in `/etc/cron.d/` (path for most linux distributions).
-An example file performing `git-dh` every five minutes can be found in docs/gitdh.cron
+An example file performing `git-dh`/`git-dh-cron` every five minutes can be found in docs/gitdh.cron

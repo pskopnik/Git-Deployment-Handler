@@ -4,4 +4,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 MAILTO=root
 
 */5 * * * *       www-data    git-dh cron /var/lib/gitolite/gitdh_website.conf
-
+*/5 * * * *       www-data    git-dh-cron /var/lib/gitolite/repositories/backend.git /var/lib/gitolite/repositories/nginxconf.git

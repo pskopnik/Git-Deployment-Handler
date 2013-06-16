@@ -29,6 +29,7 @@ Postprocessing = customscript crunch
 [website-dev]
 RepositoryName = example
 Path = /var/www/example_dev/
+RmIntGitFiles = False
 DatabaseLog = True
 Postprocessing = customscript
 
