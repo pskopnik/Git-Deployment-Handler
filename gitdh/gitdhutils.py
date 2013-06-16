@@ -53,8 +53,8 @@ def deleteUpdateRepo(path, repositoryDir, branch, commit=None, rmIntGitFiles=Tru
 			syslog(LOG_ERR, "Git return code after resetting to head is '{0}', branch '{1}'".format(returncode, branch))
 	if rmIntGitFiles:
 		deleteDir(os.path.join(path, '.git'))
-		if os.path.isfile(os.path.join(path), '.gitignore'):
-			os.unlink(os.path.join(path), '.gitignore')
+		if os.path.isfile(os.path.join(path, '.gitignore')):
+			os.unlink(os.path.join(path, '.gitignore'))
 
 
 def mInsertCommit(dbBe, commits):

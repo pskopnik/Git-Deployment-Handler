@@ -19,11 +19,14 @@ def gitDhMain(configFile, action, args, dbBe=None, repositoryName=None, reposito
 			raise Exception("Git::RepositoriesDir == 'AUTO' and no repositoryname given")
 		config["Git"]["RepositoriesDir"] = repositoriesDir
 
-	if "RepositoryName" in config["Git"]:
-		for section in config:
-			if not section in ["Git", "DEFAULT", "Database"] and not ("-" in section and section[section.rfind('-') + 1:] == "command"):
-				if not "RepositoryName" in config[section]:
-					config[section]["RepositoryName"] = config["Git"]["RepositoryName"]
+
+	for section in config:
+		if not section in ["Git", "DEFAULT", "Database"] and not ("-" in section and section[section.rfind('-') + 1:] == "command"):
+			config[section]["RepositoriesDir"] = config["Git"]["RepositoriesDir"]
+			if "RepositoryName" in config["Git"] and not "RepositoryName" in config[section]:
+				config[section]["RepositoryName"] = config["Git"]["RepositoryName"]
+			config[section]["RepositoryDir"] = os.path.join(config[section]["RepositoriesDir"], config[section]["RepositoryName"] + '.git')
+
 
 	if dbBe == None:
 		dbBe = DatabaseBackend.getDatabaseBackend(config=config)
