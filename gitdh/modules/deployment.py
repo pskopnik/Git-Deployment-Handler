@@ -12,11 +12,12 @@ class Deployment(Module):
 		for commit in commits:
 			if commit.status != None and "_" in commit.status and commit.status[commit.status.rfind('_') + 1:] == "queued" and not (hasattr(commit, "preventDepl") and commit.preventDepl):
 				self.dbBe.setStatusWorking(commit)
-				confSection = self.conf[commit.branch]
-				syslog(LOG_INFO, "Pulling commit '{0}'' for branch '{1}'".format(commit.hash, commit.branch))
+				configSection = self.config[commit.branch]
+				syslog(LOG_INFO, "Deploying commit '{0}' from '{1}' : '{2}'".format(commit.hash, commit.repository, commit.branch))
 				rmIntGitFiles = True
-				if "RmIntGitFiles" in confSection:
-					rmIntGitFiles = confSection.getboolean("RmIntGitFiles")
-				gitdhutils.deleteUpdateRepo(confSection["Path"], confSection["RepositoryDir"], commit.branch, rmIntGitFiles=rmIntGitFiles)
+				if "RmIntGitFiles" in configSection:
+					rmIntGitFiles = configSection.getboolean("RmIntGitFiles")
+				if not hasattr(commit, "deploymentSource"): commit.deploymentSource = configSection["Source"]
+				gitdhutils.deleteUpdateRepo(configSection["Path"], commit.deploymentSource, commit.branch, rmIntGitFiles=rmIntGitFiles)
 				self.dbBe.setStatusFinished(commit)
 				commit.deployed = True

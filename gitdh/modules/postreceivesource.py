@@ -16,14 +16,14 @@ class PostReceiveSource(Module):
 		if ref.find("refs/heads/") == 0:
 			branch = ref[11:]
 		else:
-			syslog(LOG_ERR,  "Branch name could not be parsed in '{0}'".format(ref))
+			syslog(LOG_ERR, "Branch name could not be parsed in '{0}'".format(ref))
 			return []
 
-		if not branch in self.conf:
+		if not branch in self.config:
 			syslog(LOG_ERR, "No section in config for branch '{0}'".format(branch))
 			return []
 
-		gitRepo = git.Git(repositoryName=self.conf[branch]["RepositoryName"], repositoriesDir=self.conf["Git"]["RepositoriesDir"])
+		gitRepo = git.Git(repositoryName=self.config[branch]["RepositoryName"], repositoriesDir=self.config["Git"]["RepositoriesDir"])
 		commits = gitRepo.getLog(since=firstCommit, until=lastCommit, branch=branch)
 
 		for commit in commits:

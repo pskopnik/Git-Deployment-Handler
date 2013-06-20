@@ -15,17 +15,17 @@ class PostProcessing(Module):
 				self.runPostprocessing(commit)
 
 	def runPostprocessing(self, commit):
-		confSection = self.conf[commit.branch]
-		if "Postprocessing" in confSection:
-			postprocCommandString = confSection["Postprocessing"]
+		configSection = self.config[commit.branch]
+		if "Postprocessing" in configSection:
+			postprocCommandString = configSection["Postprocessing"]
 			postprocCommands = postprocCommandString.split(" ")
 			for postprocCommand in postprocCommands:
-				if not postprocCommand + "-command" in self.conf:
+				if not postprocCommand + "-command" in self.config:
 					syslog(LOG_ERR, "Command '{0}' doesn't exist".format(postprocCommand))
 				else:
-					commandSection = self.conf[postprocCommand + "-command"]
+					commandSection = self.config[postprocCommand + "-command"]
 					configMode = commandSection["Mode"]
-					path = self.conf[commit.branch]["Path"]
+					path = self.config[commit.branch]["Path"]
 					if configMode == "once":
 						self.executePathCommand(commandSection["Command"], path, path)
 					elif configMode == "perfile":

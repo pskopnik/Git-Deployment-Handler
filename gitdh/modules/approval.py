@@ -5,11 +5,11 @@ from gitdh import gitdhutils
 
 class Approval(Module):
 	def isEnabled(self, action):
-		return (action == "postreceive")
+		return (action == "postreceive" and "Database" in self.config)
 
 	def preProcessing(self, commits):
 		for commit in commits:
-			if "Approval" in self.conf[commit.branch] and self.conf.getboolean(commit.branch, "Approval"):
+			if "Approval" in self.config[commit.branch] and self.config.getboolean(commit.branch, "Approval"):
 				commit.status = "approval"
 
 	def processing(self, commits):

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 class Module(object):
-	def __init__(self, conf, args, dbBe):
-		self.conf = conf
+	def __init__(self, config, args, dbBe):
+		self.config = config
 		self.args = args
 		self.dbBe = dbBe
 

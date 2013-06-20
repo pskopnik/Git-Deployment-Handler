@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import os
+import os, string, random
 from subprocess import call, CalledProcessError
 from syslog import syslog, LOG_ERR
 
@@ -30,7 +30,7 @@ def deleteDir(dir):
 	except Exception as e:
 		print(e)
 
-def deleteUpdateRepo(path, repositoryDir, branch, commit=None, rmIntGitFiles=True):
+def deleteUpdateRepo(path, sourceRepository, branch, commit=None, rmIntGitFiles=True):
 	path = path.rstrip("/ ")
 	if not os.path.exists(path):
 		os.mkdir(path)
@@ -38,7 +38,12 @@ def deleteUpdateRepo(path, repositoryDir, branch, commit=None, rmIntGitFiles=Tru
 		if not os.path.isdir(path):
 			raise Exception("'{0}' is not a directory".format(path))
 		deleteDirContent(path)
-	args = ('git', 'clone', '-q', '-l', '-s', '-b', branch, 'file://' + repositoryDir, os.path.basename(path))
+	
+	if os.path.exists(sourceRepository):
+		args = ('git', 'clone', '-q', '-l', '-s', '-b', branch, 'file://' + sourceRepository, os.path.basename(path))
+	else:
+		args = ('git', 'clone', '-q', '-b', branch, sourceRepository, os.path.basename(path))
+
 	returncode = call(args, cwd=os.path.dirname(path), stdout=open('/dev/null'), stderr=open('/dev/null'))
 	if returncode != 0:
 		syslog(LOG_ERR, "Git return code after pulling is '{0}', branch '{1}'".format(returncode, branch))
@@ -77,20 +82,18 @@ def insertOnStatus(status, dbBe, commit):
 			insertCommit(dbBe, commit)
 
 
-def filterOnStatusBase(statusBase, commits):
-	filteredCommits = []
-	for commit in commits:
-		if '_' in commit.status and commit.status[:commit.status.rfind('_')] == statusBase:
-			filteredCommits.append(commit)
-	return filteredCommits
+def filterOnStatus(status, commits):
+	return [commit for commit in commits if commit.status == status]
 
+def filterOnStatusBase(statusBase, commits):
+	return [commit for commit in commits if '_' in commit.status and commit.status[:commit.status.rfind('_')] == statusBase]
 
 def filterOnStatusExt(statusExt, commits):
-	filteredCommits = []
-	for commit in commits:
-		if '_' in commit.status and commit.status[commit.status.rfind('_') + 1:] == statusExt:
-			filteredCommits.append(commit)
-	return filteredCommits
+	return [commit for commit in commits if '_' in commit.status and commit.status[commit.status.rfind('_') + 1:] == statusExt]
+
+def filterOnSource(source, commits):
+	return [commit for commit in commits if commit.repository == source]
+
 
 def getExePath(file):
 	"""Similar to the UNIX command `which`, but returns the whole file path, not just the directory."""
@@ -100,3 +103,12 @@ def getExePath(file):
 			return filePath
 	raise Exception("File not found")
 
+def getConfigBranchSections(config):
+	returnSections = []
+	f = lambda section: not section in ["Git", "DEFAULT", "Database"] and not ("-" in section and section[section.rfind('-') + 1:] == "command")
+	for section in filter(f, config):
+		returnSections.append(section)
+	return returnSections
+
+def generateRandomString(length, characters=string.ascii_lowercase):
+	return ''.join(random.choice(characters) for i in range(length))

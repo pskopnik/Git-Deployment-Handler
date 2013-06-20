@@ -8,6 +8,7 @@ It uses the git post-receive hook and a cron job (only needed for the approval s
 ##Requirements
 
  * python3.2
+ * git (command line tool)
  * _Either_
    * mysql and PyMySQL
    * mongodb and pymongo
@@ -28,7 +29,7 @@ gitdh is configured using a config file in INI syntax.
 It can either be stored somewhere on the local file system or in a file named `gitdh.conf` in a `gitdh` branch in the git repository the `post-receive` hook is installed in (see the _post-receive setup_ section).
 A complete example config file can be found in docs/gitdh.conf.sample.
 
-Necessary sections of the config file are `Database` and `Git`
+Often a `Database` section is needed.
 
     # Database must either be mysql or mongodb
     
@@ -49,31 +50,38 @@ Necessary sections of the config file are `Database` and `Git`
     Port = 27017
     Database = git-commits
     Collection = commits
-    
-    # Git has to contain the path of the folder where the bare git repositories are stored in
+
+The `Git` section can contain default values for all branch sections in the config file.
+
+    # Git can contain the path of the folder where the bare git repositories are stored in.
     # Additionally it can contain the name of the repository which should be exported, when the option
     # is set, the given value is the default for the whole file.
-    # If only the 'postreceive' action is used for a repository, both options can be set to 'AUTO'.
+    # If only the `git-dh-pr` and `git-dh-cron` commands used for a repository, both options can be set to 'AUTO'.
     [Git]
     RepositoriesDir = /var/lib/gitolite/repositories/
     #RepositoryName = website
 
-For every branch which should be deployed by gitdh a new section has to be created.
+For every branch which should be deployed by gitdh a new section has to be created. The name of the section has to be the name of the branch which is deployed.
 
     # The master is branch is being deployed.
     [master]
     # Deploy to /var/www_dev
     Path = /var/www_dev/
+    # The source repository, can be omitted when RepositoriesDir and RepositoryName are set in the Git section
+    # or RepositoriesDir is set in the Git section and RepositoryName in the branch section
+    #Source = /var/lib/gitolite/repositories/website.git
     # RepositoryName can be omitted when set in the Git section
     RepositoryName = website
 
 The other available options are:
 
- * `DatabaseLog` - `True` or `False`, whether every commit should be logged to the database
- * `CronDeployment` - `True` or `False`, whether every commit should be inserted into the database and deployed by cron job instead of deploying it directly, e.g. when permissions aren't available
- * `Approval` - `True` or `False`, whether every commit has to be first approved in the database and is then deployed by cron job
+ * `DatabaseLog` - `True` or `False`, whether every commit should be logged to the database; default `False`
+ * `CronDeployment` - `True` or `False`, whether every commit should be inserted into the database and deployed by cron job instead of deploying it directly, e.g. when permissions aren't available; default `False`
+ * `Approval` - `True` or `False`, whether every commit has to be first approved in the database and is then deployed by cron job; default `False`
  * `Postprocessing` - space separated list of commands which should be performed onto the deployed files
  * `RmGitIntFiles` - `True` or `False`, whether internal git files should be deleted (.git/ and .gitignore); default `True`
+ * `External` - `True` or `False`, whether the Source is an external repository (only `cron` action); default `False`
+ * `IdentityFile` - Can contain the path of an IdentityFile (as in .ssh/config) when External is used and Source is a SSH URL; default None
 
 ###Commands
 

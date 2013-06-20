@@ -20,6 +20,9 @@ databaselog_queued
 databaselog_working
 databaselog_finished
 
+external_queued
+external_working
+external_finished
 
 ##Old statuses:
 

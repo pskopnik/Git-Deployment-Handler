@@ -5,7 +5,7 @@ from gitdh import gitdhutils
 
 class DatabaseLog(Module):
 	def isEnabled(self, action):
-		return (action == "postreceive")
+		return (action == "postreceive" and "Database" in self.config)
 
 	def preProcessing(self, commits):
 		for commit in commits:

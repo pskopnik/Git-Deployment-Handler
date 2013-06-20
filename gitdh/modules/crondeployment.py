@@ -5,11 +5,11 @@ from gitdh import gitdhutils
 
 class CronDeployment(Module):
 	def isEnabled(self, action):
-		return (action == "postreceive")
+		return (action == "postreceive" and "Database" in self.config)
 
 	def preProcessing(self, commits):
 		for commit in commits:
-			if "CronDeployment" in self.conf[commit.branch] and self.conf.getboolean(commit.branch, "CronDeployment"):
+			if "CronDeployment" in self.config[commit.branch] and self.config.getboolean(commit.branch, "CronDeployment"):
 				commit.status = "crondepl_queued"
 				commit.preventDepl = True
 

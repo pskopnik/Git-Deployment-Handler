@@ -3,36 +3,37 @@
 import os, os.path, importlib
 from configparser import ConfigParser
 from gitdh.databasebackend import DatabaseBackend
-
+from gitdh.gitdhutils import getConfigBranchSections
 
 def gitDhMain(configFile, action, args, dbBe=None, repositoryName=None, repositoriesDir=None):
 	config = ConfigParser()
 	config.read(configFile)
 
-	if "RepositoryName" in config["Git"] and config["Git"]["RepositoryName"] == "AUTO":
-		if repositoryName == None:
-			raise Exception("Git::RepositoryName == 'AUTO' and no repositoryname given")
-		config["Git"]["RepositoryName"] = repositoryName
+	hasGitSection = "Git" in config
+	if hasGitSection:
+		if "RepositoryName" in config["Git"] and config["Git"]["RepositoryName"] == "AUTO":
+			if repositoryName == None:
+				raise Exception("Git::RepositoryName == 'AUTO' and no repositoryname given")
+			config["Git"]["RepositoryName"] = repositoryName
 
-	if "RepositoriesDir" in config["Git"] and config["Git"]["RepositoriesDir"] == "AUTO":
-		if repositoryName == None:
-			raise Exception("Git::RepositoriesDir == 'AUTO' and no repositoryname given")
-		config["Git"]["RepositoriesDir"] = repositoriesDir
+		if "RepositoriesDir" in config["Git"] and config["Git"]["RepositoriesDir"] == "AUTO":
+			if repositoryName == None:
+				raise Exception("Git::RepositoriesDir == 'AUTO' and no repositoryname given")
+			config["Git"]["RepositoriesDir"] = repositoriesDir
 
 
-	for section in config:
-		if not section in ["Git", "DEFAULT", "Database"] and not ("-" in section and section[section.rfind('-') + 1:] == "command"):
+	for section in getConfigBranchSections(config):
+		if hasGitSection:
 			config[section]["RepositoriesDir"] = config["Git"]["RepositoriesDir"]
-			if "RepositoryName" in config["Git"] and not "RepositoryName" in config[section]:
-				config[section]["RepositoryName"] = config["Git"]["RepositoryName"]
-			config[section]["RepositoryDir"] = os.path.join(config[section]["RepositoriesDir"], config[section]["RepositoryName"] + '.git')
+		if hasGitSection and "RepositoryName" in config["Git"] and not "RepositoryName" in config[section]:
+			config[section]["RepositoryName"] = config["Git"]["RepositoryName"]
+		if not "Source" in config[section]:
+			config[section]["Source"] = os.path.join(config[section]["RepositoriesDir"], config[section]["RepositoryName"] + '.git')
 
 
-	if dbBe == None:
+	if dbBe == None and "Database" in config:
 		dbBe = DatabaseBackend.getDatabaseBackend(config=config)
 
-	gitdh = __import__("gitdh.modules")
-	modules = gitdh.modules
 	enabledModules = []
 
 	modulesDir = os.path.join(os.path.dirname(__file__), 'modules')
@@ -53,7 +54,7 @@ def gitDhMain(configFile, action, args, dbBe=None, repositoryName=None, reposito
 	for module in enabledModules:
 		newCommits = module.source()
 		if newCommits != None:
-			commits += module.source()
+			commits += newCommits
 
 	for module in enabledModules:
 		module.preProcessing(commits)

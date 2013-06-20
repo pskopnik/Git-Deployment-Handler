@@ -6,7 +6,7 @@ import sys, os.path
 
 def printHelp(exitValue=0):
 	print(
-"""	Git Deployment Handler v0.51
+"""	Git Deployment Handler v0.6
 Usage:
         git-dh [--help] <configfile> <action> [args...]
 Parameters:
@@ -35,7 +35,7 @@ def cliMain():
 	action = sys.argv[2]
 	args = sys.argv[3:]
 
-	if not os.path.isfile(configSFile):
+	if not os.path.isfile(configFile):
 		syslog(LOG_INFO, "Couldn't find config file '{0}'".format(configFile))
 		exit(1)
 

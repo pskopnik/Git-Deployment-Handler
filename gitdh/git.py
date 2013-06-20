@@ -40,7 +40,8 @@ class Git(object):
 		log = self._executeGitCommand('log', '--format="#|-#commit %H|tree %T|author %cn <%ce>|date %ct|message %B" {0} ./'.format(time))
 		matches = re.findall('^#\|\-#commit (.{40})\|tree (.{40})\|author ([^\|]+)\|date (\d+)\|message ([^(#\|\-#)]*)', log, re.MULTILINE)
 		for match in matches:
-			commits.append(GitCommit(match[0], match[2], int(match[3]), match[4].strip(), branch, self.repositoryName))
+			commits.append(GitCommit(match[0], match[2], int(match[3]), match[4].strip(), branch, self.repositoryDir))
+		commits.reverse()
 		return commits
 
 	def getFileContent(self, file, branch="master"):
@@ -71,7 +72,7 @@ class Git(object):
 				fileType = 1
 			elif fileType == "tree":
 				fileType = 2
-			files.append(GitTreeNode(fileType, os.path.join(directory, fileName), branch, self))
+			files.append(GitTreeNode(fileType, os.path.join(directory, fileName), branch, gitCon=self))
 		return files
 
 	def getBranches(self):
@@ -83,14 +84,14 @@ class Git(object):
 
 
 class GitTreeNode(object):
-	def __init__(self, type, path, branch, gitCon=None, repositoryName=None):
+	def __init__(self, type, path, branch, gitCon=None, repository=None):
 		self.type = type
 		self.path = path
 		self.branch = branch
 		if gitCon == None:
-			if repositoryName == None:
-				raise GitException("No repositoryName or gitCon given")
-			gitCon = Git(repositoryName)
+			if repository == None:
+				raise GitException("No repository or gitCon given")
+			gitCon = Git(repositoryDir=repository)
 		self.gitCon = gitCon
 	
 	def getFileName(self):
@@ -132,10 +133,10 @@ class GitCommit(object):
 		self.approverDate = approverDate
 
 	def getConfSection(self, config):
-		if not self.branch in config:
-			syslog(LOG_ERR, "No section in config for branch '{0}'".format(self.branch))
-			exit(1)
-		return config[self.branch]
+		try:
+			return config[self.branch]
+		except KeyError:
+			return None
 
 class GitException(Exception):
 	def __init__(self, value):
