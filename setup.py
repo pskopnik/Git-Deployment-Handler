@@ -21,6 +21,7 @@ setup(
 			'Development Status :: 4 - Beta',
 			'License :: OSI Approved :: MIT License',
 			'Operating System :: POSIX :: Linux',
+			'Programming Language :: Python :: 3',
 			'Programming Language :: Python :: 3.2',
 			'Topic :: Software Development :: Version Control',
 		],
