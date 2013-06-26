@@ -78,7 +78,7 @@ class MySQL(DatabaseBackend):
 
 	def __del__(self):
 		self.cur.close()
-		self.client.close()
+		self.conn.close()
 
 class MongoDB(DatabaseBackend):
 	def __init__(self, config):
