@@ -59,7 +59,7 @@ class MySQL(DatabaseBackend):
 		return commits
 
 	def getAllCommits(self):
-		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status` `approver`, `approverdate` FROM `{0}` ORDER BY `date` ASC".format(self.tableName))
+		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status`, `approver`, `approverdate` FROM `{0}` ORDER BY `date` ASC".format(self.tableName))
 		commits = []
 		for dbCommit in self.cur.fetchall():
 			print(dbCommit)
