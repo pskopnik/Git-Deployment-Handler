@@ -9,7 +9,7 @@ class DatabaseLog(Module):
 
 	def preProcessing(self, commits):
 		for commit in commits:
-			if "DatabaseLog" in self.conf[commit.branch] and self.conf.getboolean(commit.branch, "DatabaseLog"):
+			if "DatabaseLog" in self.config[commit.branch] and self.config.getboolean(commit.branch, "DatabaseLog"):
 				commit.status = "databaselog_queued"
 
 	def processing(self, commits):
