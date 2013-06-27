@@ -14,6 +14,8 @@ class DatabaseBackend(object):
 			db = MySQL(config)
 		elif dbEngine == "mongodb":
 			db = MongoDB(config)
+		elif dbEngine == "sqlite":
+			db = SQLite(config)
 		else:
 			raise Exception("Unknown Database Engine")
 		return db
@@ -47,7 +49,7 @@ class MySQL(DatabaseBackend):
 		confSection = config["Database"]
 		self.conn = pymysql.connect(host=confSection["Host"], port=config.getint("Database", "Port"), user=confSection["User"], passwd=confSection["Password"], db=confSection["Database"])
 		self.cur = self.conn.cursor()
-		self.tableName = config["Database"]["Table"]
+		self.tableName = confSection["Table"]
 
 	def getQueuedCommits(self):
 		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status`, `approver`, `approverdate` FROM `{0}` WHERE status LIKE '%\_queued' ORDER BY `date` ASC".format(self.tableName))
@@ -60,6 +62,7 @@ class MySQL(DatabaseBackend):
 		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status` `approver`, `approverdate` FROM `{0}` ORDER BY `date` ASC".format(self.tableName))
 		commits = []
 		for dbCommit in self.cur.fetchall():
+			print(dbCommit)
 			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9]))
 		return commits
 
@@ -79,6 +82,53 @@ class MySQL(DatabaseBackend):
 	def __del__(self):
 		self.cur.close()
 		self.conn.close()
+
+class SQLite(MySQL):
+	def __init__(self, config):
+		import sqlite3
+		DatabaseBackend.__init__(self, config)
+		confSection = config["Database"]
+		self.conn = sqlite3.connect(confSection["DatabaseFile"])
+		self.cur = self.conn.cursor()
+		self.tableName = confSection["Table"]
+		self._createTable()
+
+	def _createTable(self):
+		self.cur.execute("""
+CREATE TABLE IF NOT EXISTS {0} (
+  `id` INTEGER PRIMARY KEY NOT NULL,
+  `hash` TEXT NOT NULL,
+  `author` TEXT NOT NULL,
+  `date` INTEGER NOT NULL,
+  `message` text NOT NULL,
+  `approver` TEXT NULL,
+  `approverdate` INTEGER NULL,
+  `status` TEXT NOT NULL,
+  `repository` TEXT NOT NULL,
+  `branch` TEXT NOT NULL
+);""".format(self.tableName))
+		self.conn.commit()
+
+	def getQueuedCommits(self):
+		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status`, `approver`, `approverdate` FROM `{0}` WHERE status LIKE '%_queued' ORDER BY `date` ASC".format(self.tableName))
+		commits = []
+		for dbCommit in self.cur.fetchall():
+			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9]))
+		return commits
+
+	def insertCommit(self, commit):
+		params = (commit.hash, commit.author, commit.date, commit.message, commit.status, commit.repository, commit.branch)
+		self.cur.execute("INSERT INTO `{0}` (`hash`, `author`, `date`, `message`, `status`, `repository`, `branch`) VALUES (?, ?, ?, ?, ?, ?, ?)".format(self.tableName), params)
+		self.cur.connection.commit()
+		commit.id = self.cur.lastrowid
+
+	def setStatus(self, commit, status):
+		commit.status = status
+		if hasattr(commit, "id") and commit.id != None:
+			params = (status, commit.id)
+			self.cur.execute("UPDATE `{0}` SET `status`=? WHERE `id`=?".format(self.tableName), params)
+			self.cur.connection.commit()
+
 
 class MongoDB(DatabaseBackend):
 	def __init__(self, config):
