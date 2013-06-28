@@ -2,14 +2,15 @@ Git Deployment Handler
 =======================
 
 The Git Deployment Handler is a tool to manage the deployment of git branches into directories.
-An approval system is built in, MongoDb and MySQL (sqlite will be added soon) are the supported DatabaseBackends.
-It uses the git post-receive hook and a cron job (only needed for the approval system) to automatically deploy commits.
+An approval system is built in, MongoDb, MySQL and sqlite are the supported DatabaseBackends.
+It uses the git post-receive hook and a cron job (only needed for Approval/DatabaseLog/CronDeployment/External) to automatically deploy commits.
 
 ##Requirements
 
  * python3.2
  * git (command line tool)
- * _Either_
+ * _For Approval/DatabaseLog/CronDeployment/External Either_
+   * sqlite3
    * mysql and PyMySQL
    * mongodb and pymongo
 
@@ -50,6 +51,12 @@ Often a `Database` section is needed.
     Port = 27017
     Database = git-commits
     Collection = commits
+
+    # The databasefile has to be writable for all users git-dh is executed as
+    [Database]
+    Engine = sqlite
+    DatabaseFile = /var/lib/gitolite/data.sqlite
+    Table = commits
 
 The `Git` section can contain default values for all branch sections in the config file.
 
