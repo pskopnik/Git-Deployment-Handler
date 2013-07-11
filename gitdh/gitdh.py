@@ -23,11 +23,13 @@ def gitDhMain(configFile, action, args, dbBe=None, repositoryName=None, reposito
 
 
 	for section in getConfigBranchSections(config):
-		if hasGitSection:
+		if hasGitSection and "RepositoriesDir" in config["Git"] and not "RepositoriesDir" in config[section]:
 			config[section]["RepositoriesDir"] = config["Git"]["RepositoriesDir"]
 		if hasGitSection and "RepositoryName" in config["Git"] and not "RepositoryName" in config[section]:
 			config[section]["RepositoryName"] = config["Git"]["RepositoryName"]
-		if not "Source" in config[section]:
+		if "Source" in config[section]:
+			pass
+		else:
 			config[section]["Source"] = os.path.join(config[section]["RepositoriesDir"], config[section]["RepositoryName"] + '.git')
 
 
