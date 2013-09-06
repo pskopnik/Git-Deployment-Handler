@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from gitdh.gitdh import gitDhMain
-import sys, os.path
+import syslog, sys, os.path
 
 def printHelp(exitValue=0):
 	print(
@@ -36,7 +36,7 @@ def cliMain():
 	args = sys.argv[3:]
 
 	if not os.path.isfile(configFile):
-		syslog(LOG_INFO, "Couldn't find config file '{0}'".format(configFile))
+		syslog(syslog.LOG_INFO, "Couldn't find config file '{0}'".format(configFile))
 		exit(1)
 
 	gitDhMain(configFile, action, args)
