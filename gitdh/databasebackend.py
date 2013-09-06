@@ -62,7 +62,6 @@ class MySQL(DatabaseBackend):
 		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status`, `approver`, `approverdate` FROM `{0}` ORDER BY `date` ASC".format(self.tableName))
 		commits = []
 		for dbCommit in self.cur.fetchall():
-			print(dbCommit)
 			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9]))
 		return commits
 
