@@ -1,29 +1,28 @@
 Git Deployment Handler
 ======================
 
-The Git Deployment Handler is a tool to manage the deployment of
-git branches into directories. An approval system is built in,
-MongoDb, MySQL and sqlite are the supported DatabaseBackends. It
-uses the git post-receive hook and a cron job (only needed for
-Approval/DatabaseLog/CronDeployment/External) to automatically
-deploy commits.
+The Git Deployment Handler is a tool to manage the deployment of git
+branches into directories. An approval system is built in, MongoDb,
+MySQL and sqlite are the supported DatabaseBackends. It uses the git
+post-receive hook and a cron job (only needed for
+Approval/DatabaseLog/CronDeployment/External) to automatically deploy
+commits.
 
 Requirements
 ------------
 
-
 -  python3.2
 -  git (command line tool)
 -  *For Approval/DatabaseLog/CronDeployment/External Either*
--  sqlite3
--  mysql and PyMySQL
--  mongodb and pymongo
+
+   -  sqlite3
+   -  mysql and PyMySQL
+   -  mongodb and pymongo
 
 Installation
 ------------
 
-The easiest way to install gitdh is to use the Python Package
-Index:
+The easiest way to install gitdh is to use the Python Package Index:
 
 ::
 
@@ -38,19 +37,19 @@ Of course a manual installation is possible as well:
 Configuration
 -------------
 
-gitdh is configured using a config file in INI syntax. It can
-either be stored somewhere on the local file system or in a file
-named ``gitdh.conf`` in a ``gitdh`` branch in the git repository
-the ``post-receive`` hook is installed in (see the
-*post-receive setup* section). A complete example config file can
-be found in docs/gitdh.conf.sample.
+gitdh is configured using a config file in INI syntax. It can either be
+stored somewhere on the local file system or in a file named
+``gitdh.conf`` in a ``gitdh`` branch in the git repository the
+``post-receive`` hook is installed in (see the *post-receive setup*
+section). A complete example config file can be found in
+docs/gitdh.conf.sample.
 
 Often a ``Database`` section is needed.
 
 ::
 
     # Database must either be mysql or mongodb
-    
+
     # The structure for the necessary `commits` table can be found in docs/commits.sql
     [Database]
     Engine = mysql
@@ -60,7 +59,7 @@ Often a ``Database`` section is needed.
     Password = root
     Database = git-commits
     Table = commits
-    
+
     # MongoDb requires no structure or preconfiguration
     [Database]
     Engine = mongodb
@@ -68,15 +67,15 @@ Often a ``Database`` section is needed.
     Port = 27017
     Database = git-commits
     Collection = commits
-    
+
     # The databasefile has to be writable for all users git-dh is executed as
     [Database]
     Engine = sqlite
     DatabaseFile = /var/lib/gitolite/data.sqlite
     Table = commits
 
-The ``Git`` section can contain default values for all branch
-sections in the config file.
+The ``Git`` section can contain default values for all branch sections
+in the config file.
 
 ::
 
@@ -88,9 +87,9 @@ sections in the config file.
     RepositoriesDir = /var/lib/gitolite/repositories/
     #RepositoryName = website
 
-For every branch which should be deployed by gitdh a new section
-has to be created. The name of the section has to be the name of
-the branch which is deployed.
+For every branch which should be deployed by gitdh a new section has to
+be created. The name of the section has to be the name of the branch
+which is deployed.
 
 ::
 
@@ -106,32 +105,30 @@ the branch which is deployed.
 
 The other available options are:
 
-
--  ``DatabaseLog`` - ``True`` or ``False``, whether every commit
-   should be logged to the database; default ``False``
+-  ``DatabaseLog`` - ``True`` or ``False``, whether every commit should
+   be logged to the database; default ``False``
 -  ``CronDeployment`` - ``True`` or ``False``, whether every commit
-   should be inserted into the database and deployed by cron job
-   instead of deploying it directly, e.g. when permissions aren't
-   available; default ``False``
--  ``Approval`` - ``True`` or ``False``, whether every commit has
-   to be first approved in the database and is then deployed by cron
-   job; default ``False``
--  ``Postprocessing`` - space separated list of commands which
-   should be performed onto the deployed files
--  ``RmGitIntFiles`` - ``True`` or ``False``, whether internal git
-   files should be deleted (.git/ and .gitignore); default ``True``
+   should be inserted into the database and deployed by cron job instead
+   of deploying it directly, e.g. when permissions aren't available;
+   default ``False``
+-  ``Approval`` - ``True`` or ``False``, whether every commit has to be
+   first approved in the database and is then deployed by cron job;
+   default ``False``
+-  ``Postprocessing`` - space separated list of commands which should be
+   performed onto the deployed files
+-  ``RmGitIntFiles`` - ``True`` or ``False``, whether internal git files
+   should be deleted (.git/ and .gitignore); default ``True``
 -  ``External`` - ``True`` or ``False``, whether the Source is an
    external repository (only ``cron`` action); default ``False``
--  ``IdentityFile`` - Can contain the path of an IdentityFile (as
-   in .ssh/config) when External is used and Source is a SSH URL;
-   default None
+-  ``IdentityFile`` - Can contain the path of an IdentityFile (as in
+   .ssh/config) when External is used and Source is a SSH URL; default
+   None
 
 Commands
 ~~~~~~~~
 
 Commands are stored in additional sections in the config file. The
-section name is the name of the command with trailing
-``-command``.
+section name is the name of the command with trailing ``-command``.
 
 ::
 
@@ -139,19 +136,19 @@ section name is the name of the command with trailing
     Mode = perfile
     RegExp = \.php$
     Command = eff_php_crunch ${f}
-    
+
     [customscript-command]
     Mode = once
     Command = ${f}/custom.sh
 
-``Mode`` can either be ``perfile`` or ``once``. The command defines
-the actual command which is executed. In the Command string
-``${f}`` is substituted with a file path.
+``Mode`` can either be ``perfile`` or ``once``. The command defines the
+actual command which is executed. In the Command string ``${f}`` is
+substituted with a file path.
 
-If ``Mode`` equals ``perfile``, the command is performed once for
-every file in the repository which matches the regular expression
-in the optional ``RegExp`` option. The file path is the path of the
-individual file in this case.
+If ``Mode`` equals ``perfile``, the command is performed once for every
+file in the repository which matches the regular expression in the
+optional ``RegExp`` option. The file path is the path of the individual
+file in this case.
 
 If ``Mode`` equals ``once``, the command is performed once for the
 deployed repository, the file path in this case is the path of the
@@ -160,8 +157,8 @@ deployed repository.
 ``postreceive`` Setup
 ---------------------
 
-The post-receive hook can be set up automatically with the
-``git-dh-pr`` command:
+The post-receive hook can be set up automatically with the ``git-dh-pr``
+command:
 
 ::
 
@@ -169,40 +166,36 @@ The post-receive hook can be set up automatically with the
     # git-dh-pr --install
 
 After the setup with ``git-dh-pr`` the ``gitdh.conf`` file in the
-``gitdh`` branch is automatically used as the configuration file.
-The ``git-dh-pr`` command can also create the post-receive hook in
-another directory and with another name:
+``gitdh`` branch is automatically used as the configuration file. The
+``git-dh-pr`` command can also create the post-receive hook in another
+directory and with another name:
 
 ::
 
     # git-dh-pr --install --name hooks/post-receive.gitdh
 
-A static setup still can be used, see docs/post-receive.static as
-an example. A file like docs/post-receive.static has to be created
-with the name ``post-receive`` in the hooks/ directory of the git
-repository.
+A static setup still can be used, see docs/post-receive.static as an
+example. A file like docs/post-receive.static has to be created with the
+name ``post-receive`` in the hooks/ directory of the git repository.
 
 ``cron`` Setup
 --------------
 
-To perform cron database checks, the ``git-dh`` has to be called
-with the ``cron`` action.
+To perform cron database checks, the ``git-dh`` has to be called with
+the ``cron`` action.
 
 ::
 
     git-dh <configfile> cron
 
-If the setup is stored in a ``gitdh.conf`` file in the ``gitdh``
-branch of an repository the ``git-dh-cron`` command has to be
-used.
+If the setup is stored in a ``gitdh.conf`` file in the ``gitdh`` branch
+of an repository the ``git-dh-cron`` command has to be used.
 
 ::
 
     git-dh-cron <repository directory>...
 
-To automate this, a cron file can be created in ``/etc/cron.d/``
-(path for most linux distributions). An example file performing
+To automate this, a cron file can be created in ``/etc/cron.d/`` (path
+for most linux distributions). An example file performing
 ``git-dh``/``git-dh-cron`` every five minutes can be found in
 docs/gitdh.cron
-
-

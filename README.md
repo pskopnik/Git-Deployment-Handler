@@ -10,9 +10,9 @@ It uses the git post-receive hook and a cron job (only needed for Approval/Datab
  * python3.2
  * git (command line tool)
  * _For Approval/DatabaseLog/CronDeployment/External Either_
-   * sqlite3
-   * mysql and PyMySQL
-   * mongodb and pymongo
+    * sqlite3
+    * mysql and PyMySQL
+    * mongodb and pymongo
 
 ##Installation
 
