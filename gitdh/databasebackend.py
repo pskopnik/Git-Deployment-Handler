@@ -5,10 +5,7 @@ from gitdh.git import GitCommit
 
 class DatabaseBackend(object):
 	@staticmethod
-	def getDatabaseBackend(config=None):
-		if config == None:
-			config = ConfigParser()
-			config.read("config.ini")
+	def getDatabaseBackend(config):
 		dbEngine = config["Database"]["Engine"]
 		if dbEngine == "mysql":
 			db = MySQL(config)
@@ -19,7 +16,7 @@ class DatabaseBackend(object):
 		else:
 			raise Exception("Unknown Database Engine")
 		return db
-	
+
 	def __init__(self, config):
 		self.config = config
 

@@ -38,7 +38,7 @@ def deleteUpdateRepo(path, sourceRepository, branch, commit=None, rmIntGitFiles=
 		if not os.path.isdir(path):
 			raise Exception("'{0}' is not a directory".format(path))
 		deleteDirContent(path)
-	
+
 	if os.path.exists(sourceRepository):
 		args = ('git', 'clone', '-q', '-l', '-s', '-b', branch, 'file://' + sourceRepository, os.path.basename(path))
 	else:
@@ -96,19 +96,12 @@ def filterOnSource(source, commits):
 
 
 def getExePath(file):
-	"""Similar to the UNIX command `which`, but returns the whole file path, not just the directory."""
+	"""Similar to the UNIX command `which`"""
 	for directory in os.environ["PATH"].split(':'):
 		filePath = os.path.join(directory, file)
 		if os.path.exists(filePath) and os.path.isfile(filePath):
 			return filePath
 	raise Exception("File not found")
-
-def getConfigBranchSections(config):
-	returnSections = []
-	f = lambda section: not section in ["Git", "DEFAULT", "Database"] and not ("-" in section and section[section.rfind('-') + 1:] == "command")
-	for section in filter(f, config):
-		returnSections.append(section)
-	return returnSections
 
 def generateRandomString(length, characters=string.ascii_lowercase):
 	return ''.join(random.choice(characters) for i in range(length))
