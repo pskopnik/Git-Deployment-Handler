@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gitdh.modules.module import Module
+from gitdh.modules import Module
 from syslog import syslog, LOG_ERR, LOG_INFO
 from gitdh import gitdhutils
 

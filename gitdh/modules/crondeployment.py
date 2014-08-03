@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gitdh.modules.module import Module
+from gitdh.modules import Module
 from gitdh import gitdhutils
 
 class CronDeployment(Module):
