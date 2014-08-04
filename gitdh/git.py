@@ -2,30 +2,36 @@
 
 import shlex
 from subprocess import check_output, CalledProcessError
-import os.path, re
+import os, os.path, re
 
 class Git(object):
-	def __init__(self, repositoryName=None, repositoriesDir='/srv/gitosis/repositories', repositoryDir=None):
-		if repositoryName != None:
-			self.repositoryName = repositoryName
-			self.repositoriesDir = repositoriesDir
-			repositoryDir = os.path.join(self.repositoriesDir, repositoryName + '.git')
-		elif repositoryDir != None:
-			self.repositoryName = os.path.basename(repositoryDir).split('.git')[0]
-			self.repositoriesDir = os.path.abspath(os.path.join(repositoryDir, os.pardir))
-		else:
-			raise GitException("Git.__init__() either needs repositoryName and repositoriesDir or repositoryDir")
+	branchPattern = re.compile(r"[\*\s]\s(\S+)$", re.MULTILINE)
 
-		if os.path.isdir(repositoryDir) != True:
-			raise GitException("Repository directory does not exist")
-		self.repositoryDir = repositoryDir
+	def __init__(self, repositoryPath):
+		self.repositoryPath = repositoryPath
+		try:
+			self._executeGitCommand("rev-parse")
+		except CalledProcessError:
+			raise GitException("The directory '%s' is not a Git repository" % (repositoryPath))
 
-	def _executeGitCommand(self, gitCommand, options, repositoryDir=None):
-		if repositoryDir == None:
-			repositoryDir = self.repositoryDir
+	def getRepoInfo(self):
+		repoInfo = {}
+		repoInfo["repositoryPath"] = self.repositoryPath
+		repoInfo["repositoryName"] = os.path.basename(self.repositoryPath).split('.git')[0]
+		repoInfo["repositoriesDirPath"] = os.path.abspath(os.path.join(self.repositoryPath, os.pardir))
+		return repoInfo
+
+	def _executeGitCommand(self, gitCommand, options='', repositoryPath=None, suppressStderr=False):
+		if repositoryPath == None:
+			repositoryPath = self.repositoryPath
 		cmd = 'git ' + gitCommand + ' ' + options
 		args = shlex.split(cmd)
-		return check_output(args, cwd=repositoryDir, universal_newlines=True)
+		if suppressStderr:
+			with open(os.devnull, mode='w') as fd:
+				cmdOutput = check_output(args, cwd=repositoryPath, universal_newlines=True, stderr=fd)
+			return cmdOutput
+		else:
+			return check_output(args, cwd=repositoryPath, universal_newlines=True)
 
 	def getLog(self, since=None, until=None, branch=None):
 		time = ""
@@ -36,7 +42,7 @@ class Git(object):
 			if until == None:
 				until = ""
 			time = since + ".." + until
-		
+
 		log = self._executeGitCommand('log', '--format="#|-#commit %H|tree %T|author %cn <%ce>|date %ct|message %B" {0} ./'.format(time))
 		matches = re.findall('^#\|\-#commit (.{40})\|tree (.{40})\|author ([^\|]+)\|date (\d+)\|message ([^(#\|\-#)]*)', log, re.MULTILINE)
 		for match in matches:
@@ -44,12 +50,12 @@ class Git(object):
 		commits.reverse()
 		return commits
 
-	def getFileContent(self, file, branch="master"):
+	def getFileContent(self, filePath, branch="master"):
 		try:
-			fileContent = self._executeGitCommand('cat-file', ' -p {0}:{1}'.format(branch, file))
+			fileContent = self._executeGitCommand('cat-file', ' -p {0}:{1}'.format(branch, filePath))
 		except CalledProcessError as error:
 			if error.returncode == 128:
-				raise GitException("The file does not exists in the branch")
+				raise GitException("The file '%s' does not exist in the branch '%s'" % (filePath, branch))
 			else:
 				raise GitException("Unknown error")
 		return fileContent
@@ -60,7 +66,7 @@ class Git(object):
 			fileString = self._executeGitCommand('ls-tree', '{0}:{1} ./'.format(branch, directory))
 		except CalledProcessError as error:
 			if error.returncode == 128:
-				raise GitException("The file does not exists in the branch")
+				raise GitException("The directory '%s' does not exist in the branch '%s'" % (directory, branch))
 			else:
 				raise GitException("Unknown error")
 		fileLines = fileString.splitlines()
@@ -68,19 +74,12 @@ class Git(object):
 			fileLineHalfs = fileLine.split("\t")
 			fileName = fileLineHalfs[1]
 			fileType = fileLineHalfs[0].split(" ")[1]
-			if fileType == "blob":
-				fileType = 1
-			elif fileType == "tree":
-				fileType = 2
 			files.append(GitTreeNode(fileType, os.path.join(directory, fileName), branch, gitCon=self))
 		return files
 
 	def getBranches(self):
-		branchOutput = self._executeGitCommand("branch", "")
-		branchPattern = re.compile(r"[\*\s]\s(\S+)$", re.MULTILINE)
-		return branchPattern.findall(branchOutput)
-
-
+		branchOutput = self._executeGitCommand("branch")
+		return Git.branchPattern.findall(branchOutput)
 
 
 class GitTreeNode(object):
@@ -93,31 +92,32 @@ class GitTreeNode(object):
 				raise GitException("No repository or gitCon given")
 			gitCon = Git(repositoryDir=repository)
 		self.gitCon = gitCon
-	
+
 	def getFileName(self):
 		fileName = os.path.basename(self.path)
 		if self.type == 2:
 			fileName = fileName + "/"
 		return fileName
-	
+
 	def getFilePath(self):
 		filePath = self.path
 		if self.type == 2:
 			filePath = filePath + "/"
 		return filePath
-	
+
 	def getFileType(self):
 		return self.type
-	
+
 	def getFileContent(self):
-		if self.type != 1:
-			raise GitException("Cannot get the content of a directory")
+		if not self.type == 'blob':
+			raise GitException("Can only get the content of a 'blob' object, '%s' object given" % self.type)
 		return self.gitCon.getFileContent(self.path, self.branch)
 
 	def getChildFiles(self):
-		if self.type != 2:
-			raise GitException("Cannot get child files from a file")
+		if not self.type ==  'tree':
+			raise GitException("Can only get child files from a 'tree' object, '%s' object given" % self.type)
 		return self.gitCon.getFiles(self.path + "/", self.branch)
+
 
 class GitCommit(object):
 	def __init__(self, hash, author, date, message, branch, repository, id=None, status=None, approver=None, approverDate=None):
@@ -138,8 +138,6 @@ class GitCommit(object):
 		except KeyError:
 			return None
 
+
 class GitException(Exception):
-	def __init__(self, value):
-		self.value = value
-	def __str__(self):
-		return repr(self.value)
+	pass
