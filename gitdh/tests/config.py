@@ -21,6 +21,11 @@ Path=/home/www/production
 
 [development]
 Path=/home/www/development
+
+[crunch-command]
+Mode = perfile
+RegExp = \.php$
+Command = eff_php_crunch ${f}
 """
 
 	def test_branches(self):
@@ -31,25 +36,39 @@ Path=/home/www/development
 
 		self.assertEqual(len(c.branches), 2)
 
-		self.assertFalse('feature-xyz' in c.branches)
-		self.assertFalse('Git' in c.branches)
-		self.assertFalse('Database' in c.branches)
-		self.assertFalse('DEFAULT' in c.branches)
-		self.assertTrue('development' in c.branches)
-		self.assertTrue('master' in c.branches)
+		self.assertNotIn('feature-xyz', c.branches)
+		self.assertNotIn('Git', c.branches)
+		self.assertNotIn('Database', c.branches)
+		self.assertNotIn('DEFAULT', c.branches)
+		self.assertNotIn('crunch-command', c.branches)
+		self.assertIn('development', c.branches)
+		self.assertIn('master', c.branches)
 
 		self.assertRaises(KeyError, lambda: c.branches['feature-xyz'])
 		self.assertRaises(KeyError, lambda: c.branches['Git'])
 		self.assertRaises(KeyError, lambda: c.branches['Database'])
 		self.assertRaises(KeyError, lambda: c.branches['DEFAULT'])
+		self.assertRaises(KeyError, lambda: c.branches['crunch-command'])
 
 		self.assertSetEqual(set((i for i in c.branches)), set(('development', 'master')))
 
-		self.assertTrue(isinstance(c.branches['development'], SectionProxy))
-		self.assertTrue('Path' in c.branches['development'])
-		self.assertFalse('External' in c.branches['development'])
+		self.assertIsInstance(c.branches['development'], SectionProxy)
+		self.assertIn('Path', c.branches['development'])
+
+		self.assertNotIn('External', c.branches['development'])
 		c['development']['External'] = 'False'
-		self.assertTrue('External' in c.branches['development'])
+		self.assertIn('External', c.branches['development'])
+
+	def test_command(self):
+		c = Config()
+		c.read_string(self.cStr)
+
+		self.assertTrue('crunch-command' in c)
+		sct = c['crunch-command']
+		self.assertIsInstance(sct, SectionProxy)
+		self.assertEqual(sct['Mode'], 'perfile')
+		self.assertEqual(sct['RegExp'], '\.php$')
+		self.assertEqual(sct['Command'], 'eff_php_crunch ${f}')
 
 	def test_file(self):
 		f = tempfile.TemporaryFile(mode='w+')
