@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os, string, random
-from subprocess import call, CalledProcessError
+from subprocess import call
 from syslog import syslog, LOG_ERR
 
 def deleteDirContent(dir):
@@ -16,15 +16,7 @@ def deleteDirContent(dir):
 			print(e)
 
 def deleteDir(dir):
-	for file in os.listdir(dir):
-		file_path = os.path.join(dir, file)
-		try:
-			if os.path.isdir(file_path):
-				deleteDir(file_path)
-			else:
-				os.unlink(file_path)
-		except Exception as e:
-			print(e)
+	deleteDirContent(dir)
 	try:
 		os.rmdir(dir)
 	except Exception as e:
@@ -44,18 +36,20 @@ def deleteUpdateRepo(path, sourceRepository, branch, commit=None, rmIntGitFiles=
 	else:
 		args = ('git', 'clone', '-q', '-b', branch, sourceRepository, os.path.basename(path))
 
-	returncode = call(args, cwd=os.path.dirname(path), stdout=open('/dev/null'), stderr=open('/dev/null'))
-	if returncode != 0:
-		syslog(LOG_ERR, "Git return code after pulling is '{0}', branch '{1}'".format(returncode, branch))
-	if not commit == None:
-		args = ('git', 'checkout', commit)
-		returncode = call(args, cwd=path, stdout=open('/dev/null'), stderr=open('/dev/null'))
+	with open(os.devnull, 'w') as devNull:
+		returncode = call(args, cwd=os.path.dirname(path), stdout=devNull, stderr=devNull)
 		if returncode != 0:
-			syslog(LOG_ERR, "Git return code after checkout of the commit '{0}' is '{1}', branch '{2}'".format(commit, returncode, branch))
-		args = ('git', 'reset', '--hard', '-q')
-		returncode = call(args, cwd=path, stdout=open('/dev/null'), stderr=open('/dev/null'))
-		if returncode != 0:
-			syslog(LOG_ERR, "Git return code after resetting to head is '{0}', branch '{1}'".format(returncode, branch))
+			syslog(LOG_ERR, "Git return code after pulling is '{0}', branch '{1}'".format(returncode, branch))
+		if not commit == None:
+			args = ('git', 'checkout', commit)
+			returncode = call(args, cwd=path, stdout=devNull, stderr=devNull)
+			if returncode != 0:
+				syslog(LOG_ERR, "Git return code after checkout of the commit '{0}' is '{1}', branch '{2}'".format(commit, returncode, branch))
+			args = ('git', 'reset', '--hard', '-q')
+			returncode = call(args, cwd=path, stdout=devNull, stderr=devNull)
+			if returncode != 0:
+				syslog(LOG_ERR, "Git return code after resetting to head is '{0}', branch '{1}'".format(returncode, branch))
+
 	if rmIntGitFiles:
 		deleteDir(os.path.join(path, '.git'))
 		if os.path.isfile(os.path.join(path, '.gitignore')):
