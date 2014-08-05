@@ -1,1 +1,1 @@
-from gitdh.modules.module import Module
+from gitdh.module import Module
