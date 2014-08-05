@@ -13,9 +13,9 @@ Requirements
 
 -  python3.2
 -  git (command line tool)
--  *For Approval/DatabaseLog/CronDeployment/External Either*
+-  **For Approval/DatabaseLog/CronDeployment/External Either**
 
-   -  sqlite3
+   -  *sqlite3*
    -  mysql and PyMySQL
    -  mongodb and pymongo
 
@@ -116,6 +116,8 @@ The other available options are:
    default ``False``
 -  ``Postprocessing`` - space separated list of commands which should be
    performed onto the deployed files
+-  ``Preprocessing`` - space separated list of commands which should be
+   performed before deploying any commits
 -  ``RmGitIntFiles`` - ``True`` or ``False``, whether internal git files
    should be deleted (.git/ and .gitignore); default ``True``
 -  ``External`` - ``True`` or ``False``, whether the Source is an

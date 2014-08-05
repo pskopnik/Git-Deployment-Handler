@@ -9,8 +9,8 @@ It uses the git post-receive hook and a cron job (only needed for Approval/Datab
 
  * python3.2
  * git (command line tool)
- * _For Approval/DatabaseLog/CronDeployment/External Either_
-    * sqlite3
+ * __For Approval/DatabaseLog/CronDeployment/External Either__
+    * _sqlite3_
     * mysql and PyMySQL
     * mongodb and pymongo
 
@@ -33,7 +33,7 @@ A complete example config file can be found in docs/gitdh.conf.sample.
 Often a `Database` section is needed.
 
     # Database must either be mysql or mongodb
-    
+
     # The structure for the necessary `commits` table can be found in docs/commits.sql
     [Database]
     Engine = mysql
@@ -43,7 +43,7 @@ Often a `Database` section is needed.
     Password = root
     Database = git-commits
     Table = commits
-    
+
     # MongoDb requires no structure or preconfiguration
     [Database]
     Engine = mongodb
@@ -86,6 +86,7 @@ The other available options are:
  * `CronDeployment` - `True` or `False`, whether every commit should be inserted into the database and deployed by cron job instead of deploying it directly, e.g. when permissions aren't available; default `False`
  * `Approval` - `True` or `False`, whether every commit has to be first approved in the database and is then deployed by cron job; default `False`
  * `Postprocessing` - space separated list of commands which should be performed onto the deployed files
+ * `Preprocessing` - space separated list of commands which should be performed before deploying any commits
  * `RmGitIntFiles` - `True` or `False`, whether internal git files should be deleted (.git/ and .gitignore); default `True`
  * `External` - `True` or `False`, whether the Source is an external repository (only `cron` action); default `False`
  * `IdentityFile` - Can contain the path of an IdentityFile (as in .ssh/config) when External is used and Source is a SSH URL; default None
@@ -99,7 +100,7 @@ The section name is the name of the command with trailing `-command`.
     Mode = perfile
     RegExp = \.php$
     Command = eff_php_crunch ${f}
-    
+
     [customscript-command]
     Mode = once
     Command = ${f}/custom.sh
