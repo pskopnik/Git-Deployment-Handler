@@ -80,6 +80,7 @@ Command = eff_php_crunch ${f}
 		self.assertTrue('Database' in c)
 		self.assertTrue('master' in c)
 		self.assertEqual(c['Database']['Engine'], 'sqlite')
+		self.assertEqual(c.repoPath, '/var/lib/gitolite/repositories/test.git')
 
 		f.close()
 
@@ -92,12 +93,14 @@ Command = eff_php_crunch ${f}
 		self.assertTrue('Database' in c)
 		self.assertTrue('master' in c)
 		self.assertEqual(c['Database']['Engine'], 'sqlite')
+		self.assertEqual(c.repoPath, '/var/lib/gitolite/repositories/test.git')
 
 		c = Config.fromPath(f.name)
 
 		self.assertTrue('Database' in c)
 		self.assertTrue('master' in c)
 		self.assertEqual(c['Database']['Engine'], 'sqlite')
+		self.assertEqual(c.repoPath, '/var/lib/gitolite/repositories/test.git')
 
 		f.close()
 
@@ -109,11 +112,13 @@ Command = eff_php_crunch ${f}
 		self.assertTrue('Database' in c)
 		self.assertTrue('master' in c)
 		self.assertEqual(c['Database']['Engine'], 'sqlite')
+		self.assertEqual(c.repoPath, d.name)
 
 		c = Config.fromPath(d.name)
 		self.assertTrue('Database' in c)
 		self.assertTrue('master' in c)
 		self.assertEqual(c['Database']['Engine'], 'sqlite')
+		self.assertEqual(c.repoPath, d.name)
 
 		d.cleanup()
 
@@ -125,11 +130,13 @@ Command = eff_php_crunch ${f}
 		self.assertTrue('Database' in c)
 		self.assertTrue('master' in c)
 		self.assertEqual(c['Database']['Engine'], 'sqlite')
+		self.assertEqual(c.repoPath, d.name)
 
 		c = Config.fromPath(d.name)
 		self.assertTrue('Database' in c)
 		self.assertTrue('master' in c)
 		self.assertEqual(c['Database']['Engine'], 'sqlite')
+		self.assertEqual(c.repoPath, d.name)
 
 		d.cleanup()
 

@@ -61,7 +61,7 @@ class Config(ConfigParser):
 		return self._repoPath
 
 	@repoPath.setter
-	def setRepoPath(self, repoPath):
+	def repoPath(self, repoPath):
 		self._repoPath = repoPath
 
 
