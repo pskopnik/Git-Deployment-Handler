@@ -7,19 +7,19 @@ from gitdh.module import ModuleLoader
 def gitDhMain(target, action, args, dbBe=None):
 	config = Config.fromPath(target)
 
-	if not 'Git' in config or not 'RepositoryPath' in config['Git']:
+	if config.repoPath == None:
 		raise Exception("Missing RepositoryPath in '%s'" % (target,))
 
 	for branchSection in config.branches:
 		if not 'Source' in config[branchSection]:
-			config[branchSection]['Source'] = config['Git']['RepositoryPath']
+			config[branchSection]['Source'] = config.repoPath
 
 	if dbBe == None and 'Database' in config:
 		dbBe = DatabaseBackend.getDatabaseBackend(config=config)
 
 	enabledModules = []
 
-	modules = ModuleLoader.getModuleObjects(config, args, dbBe)
+	modules = ModuleLoader.initModuleObjects(config, args, dbBe)
 	for module in modules:
 		if module.isEnabled(action):
 			enabledModules.append(module)

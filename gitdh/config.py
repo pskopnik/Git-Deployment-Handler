@@ -12,10 +12,7 @@ class Config(ConfigParser):
 		if os.path.isfile(path):
 			return Config.fromFilePath(path)
 		elif os.path.isdir(path):
-			config = Config.fromGitRepo(path)
-			if not 'Git' in config:
-				config['Git'] = { 'RepositoryPath': path }
-			return config
+			return Config.fromGitRepo(path)
 		else:
 			raise Exception("Can't read config from '%s'" % (path,))
 
@@ -23,19 +20,20 @@ class Config(ConfigParser):
 	def fromGitRepo(repoPath):
 		gC = git.Git(repoPath)
 
-		if not "gitdh" in gC.getBranches():
+		if not 'gitdh' in gC.getBranches():
 			raise Exception("No Branch 'gitdh' in repository '%s'" % (repoPath,))
 
 		gFile = None
-		for file in gC.getFiles(branch="gitdh"):
-			if file.getFileName() == "gitdh.conf":
+		for file in gC.getFiles(branch='gitdh'):
+			if file.getFileName() == 'gitdh.conf':
 				gFile = file
 				break
 		if gFile == None:
-			raise Exception("No File 'gitdh.conf")
+			raise Exception("No File 'gitdh.conf' in branch 'gitdh' in repository '%s'" % (repoPath,))
 
 		config = Config()
 		config.read_string(gFile.getFileContent())
+		config.repoPath = repoPath
 		return config
 
 	@staticmethod
@@ -54,6 +52,17 @@ class Config(ConfigParser):
 	def __init__(self):
 		super().__init__()
 		self.branches = ConfigBranches(self)
+		self._repoPath = None
+
+	@property
+	def repoPath(self):
+		if self._repoPath == None:
+			return self.get('Git', 'RepositoryPath', fallback=None)
+		return self._repoPath
+
+	@repoPath.setter
+	def setRepoPath(self, repoPath):
+		self._repoPath = repoPath
 
 
 class ConfigBranches(Mapping):
@@ -61,10 +70,7 @@ class ConfigBranches(Mapping):
 		self._cfgParser = cfgParser
 
 	def keys(self):
-		for section in self._cfgParser:
-			if not self._isBranchSection(section):
-				continue
-			yield section
+		return (s for s in self._cfgParser if self._isBranchSection(s))
 
 	def __len__(self):
 		return len([i for i in self.keys()])
@@ -81,4 +87,5 @@ class ConfigBranches(Mapping):
 		return self._cfgParser[key]
 
 	def _isBranchSection(self, key):
+		# lazily load module config list
 		return not key in ('Git', 'DEFAULT', 'Database') and not ("-" in key and key[key.rfind('-') + 1:] == "command")
