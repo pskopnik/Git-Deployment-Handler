@@ -94,7 +94,7 @@ Command = eff_php_crunch ${f}
 		d = tempfile.TemporaryDirectory()
 		self._createGitRepo(d.name)
 
-		check_output(('git', 'clone', '--bare', d.name, path))
+		check_output(('git', 'clone', '-q', '--bare', d.name, path))
 
 		d.cleanup()
 
