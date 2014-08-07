@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os.path, os, re
+import gitdh.git
 from importlib import import_module
 
 class Module(object):
@@ -32,6 +33,25 @@ class Module(object):
 	def store(self, commits):
 		pass
 
+	def _removeCommit(self, commit):
+		commit.remove(self)
+
+class Commit(gitdh.git.GitCommit):
+	@staticmethod
+	def fromGitCommit(gitCommit):
+		c = Commit()
+		c.__dict__.update(gitCommit.__dict__)
+		return c
+
+	def __init__(self):
+		super().__init__(None, None, None, None, None, None)
+		self.removed = False
+		self.removers = []
+
+	def remove(self, module):
+		self.removed = True
+		self.removers.append(module)
+
 class ModuleLoader(object):
 	_objCache = {}
 
@@ -39,7 +59,7 @@ class ModuleLoader(object):
 		if modulesDir in ModuleLoader._objCache:
 			return ModuleLoader._objCache[None]
 		else:
-			obj = super().__new__(cls, modulesDir)
+			obj = super().__new__(cls)
 			ModuleLoader._objCache[modulesDir] = obj
 			return obj
 
