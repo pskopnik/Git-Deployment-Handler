@@ -1,8 +1,6 @@
-import unittest, tempfile, os.path, re
+import unittest, tempfile, re
 from gitdh.config import Config, ConfigBranches
-from gitdh.git import Git
 from configparser import SectionProxy
-from subprocess import check_output
 
 # unittest.mock is available in python >= 3.3
 # A backport exists: 'mock' on PyPi
@@ -35,37 +33,40 @@ RegExp = \.php$
 Command = eff_php_crunch ${f}
 """
 
-	@mock.patch('gitdh.module.ModuleLoader.getConfRegEx', new=mock.MagicMock(return_value=re.compile('^(.*\\-command|Git|DEFAULT|Database)$')))
 	def test_branches(self):
-		c = Config()
-		c.read_string(self.cStr)
+		confRegEx = mock.MagicMock(return_value=re.compile('^(.*\\-command|Git|DEFAULT|Database)$'))
+		with mock.patch('gitdh.module.ModuleLoader.getConfRegEx', new=confRegEx):
+			c = Config()
+			c.read_string(self.cStr)
 
-		self.assertTrue(isinstance(c.branches, ConfigBranches))
+			self.assertTrue(isinstance(c.branches, ConfigBranches))
 
-		self.assertEqual(len(c.branches), 2)
+			self.assertEqual(len(c.branches), 2)
 
-		self.assertNotIn('feature-xyz', c.branches)
-		self.assertNotIn('Git', c.branches)
-		self.assertNotIn('Database', c.branches)
-		self.assertNotIn('DEFAULT', c.branches)
-		self.assertNotIn('crunch-command', c.branches)
-		self.assertIn('development', c.branches)
-		self.assertIn('master', c.branches)
+			self.assertNotIn('feature-xyz', c.branches)
+			self.assertNotIn('Git', c.branches)
+			self.assertNotIn('Database', c.branches)
+			self.assertNotIn('DEFAULT', c.branches)
+			self.assertNotIn('crunch-command', c.branches)
+			self.assertIn('development', c.branches)
+			self.assertIn('master', c.branches)
 
-		self.assertRaises(KeyError, lambda: c.branches['feature-xyz'])
-		self.assertRaises(KeyError, lambda: c.branches['Git'])
-		self.assertRaises(KeyError, lambda: c.branches['Database'])
-		self.assertRaises(KeyError, lambda: c.branches['DEFAULT'])
-		self.assertRaises(KeyError, lambda: c.branches['crunch-command'])
+			self.assertRaises(KeyError, lambda: c.branches['feature-xyz'])
+			self.assertRaises(KeyError, lambda: c.branches['Git'])
+			self.assertRaises(KeyError, lambda: c.branches['Database'])
+			self.assertRaises(KeyError, lambda: c.branches['DEFAULT'])
+			self.assertRaises(KeyError, lambda: c.branches['crunch-command'])
 
-		self.assertSetEqual(set((i for i in c.branches)), set(('development', 'master')))
+			self.assertSetEqual(set((i for i in c.branches)), set(('development', 'master')))
 
-		self.assertIsInstance(c.branches['development'], SectionProxy)
-		self.assertIn('Path', c.branches['development'])
+			self.assertIsInstance(c.branches['development'], SectionProxy)
+			self.assertIn('Path', c.branches['development'])
 
-		self.assertNotIn('External', c.branches['development'])
-		c['development']['External'] = 'False'
-		self.assertIn('External', c.branches['development'])
+			self.assertNotIn('External', c.branches['development'])
+			c['development']['External'] = 'False'
+			self.assertIn('External', c.branches['development'])
+
+			confRegEx.assert_called_once_with()
 
 	def test_command(self):
 		c = Config()
