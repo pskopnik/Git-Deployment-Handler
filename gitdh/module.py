@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os.path, os
+import os.path, os, re
 from importlib import import_module
 
 class Module(object):
@@ -44,12 +44,25 @@ class ModuleLoader(object):
 			return obj
 
 	def __init__(self, modulesDir=None):
-		self._modules = None
-		self._moduleClasses = None
+		self.clearCache()
+		self._baseConfSects = {
+			'gitdh.config': ({'DEFAULT'}, set()),
+			'gitdh.git': ({'Git'}, set()),
+			'gitdh.database': ({'Database'}, set())
+		}
+
 		if modulesDir == None:
 			self.modulesDir = os.path.join(os.path.dirname(__file__), 'modules')
 		else:
 			self.modulesDir = modulesDir
+
+	def clearCache(self):
+		self._modules = None
+		self._moduleClasses = None
+		self._moduleConfTuples = None
+		self._confSects = None
+		self._confRegEx = None
+		self._confPatRegEx = None
 
 	def getModules(self):
 		if not self._modules == None:
@@ -83,7 +96,69 @@ class ModuleLoader(object):
 			moduleObjects.append(moduleClass(*args, **kwargs))
 		return moduleObjects
 
-	def clearCache(self):
-		self._modules = None
-		self._moduleClasses = None
+	def getModuleConfTuples(self):
+		if self._moduleConfTuples == None:
+			self._moduleConfTuples = self._fetchModConfSects()
+		return self._moduleConfTuples
 
+	def getModuleConfTuple(self, module):
+		return self.getModuleConfTuples().get(module, (set(), set()))
+
+	def getConfSects(self):
+		if not self._confSects == None:
+			return self._confSects
+
+		moduleConfSects = self.getModuleConfTuples()
+		confSects = set()
+		for sections, patterns in moduleConfSects.values():
+			confSects = confSects.union(sections)
+
+		self._confSects = confSects
+		return confSects
+
+	def getConfRegEx(self):
+		if self._confRegEx == None:
+			self._confRegEx = self._genSectRegEx()
+
+		return self._confRegEx
+
+	def getConfPatRegEx(self):
+		if self._confPatRegEx == None:
+			self._confPatRegEx = self._genSectRegEx(patOnly=True)
+
+		return self._confPatRegEx
+
+	def _fetchModConfSects(self):
+		modules = self.getModules()
+		modConfSects = self._baseConfSects
+		for module in modules:
+			sections = set()
+			patterns = set()
+			if hasattr(module, 'CONFIG_SECTIONS'):
+				sections = set(module.CONFIG_SECTIONS)
+			if hasattr(module, 'CONFIG_SECTION_PATTERNS'):
+				patterns = set(module.CONFIG_SECTION_PATTERNS)
+			if not (len(sections) == 0 and len(patterns) == 0):
+				modConfSects[module.__name__] = (sections, patterns)
+		return modConfSects
+
+	def _genSectRegEx(self, patOnly=False):
+		regExpStmt = '^('
+		first = True
+		for sections, patterns in self.getModuleConfTuples().values():
+			if not patOnly:
+				for section in sections:
+					if first:
+						first = False
+					else:
+						regExpStmt += '|'
+					regExpStmt += re.escape(section)
+			for pattern in patterns:
+				if first:
+					first = False
+				else:
+					regExpStmt += '|'
+				regExpStmt += re.escape(pattern).replace('\\*', '.*')
+		regExpStmt += ')$'
+		regExp = re.compile(regExpStmt)
+		return regExp

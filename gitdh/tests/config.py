@@ -1,8 +1,15 @@
-import unittest, tempfile, os.path
+import unittest, tempfile, os.path, re
 from gitdh.config import Config, ConfigBranches
 from gitdh.git import Git
 from configparser import SectionProxy
 from subprocess import check_output
+
+# unittest.mock is available in python >= 3.3
+# A backport exists: 'mock' on PyPi
+try:
+	import unittest.mock as mock
+except ImportError:
+	import mock
 
 class GitdhConfigTestCase(unittest.TestCase):
 
@@ -28,6 +35,7 @@ RegExp = \.php$
 Command = eff_php_crunch ${f}
 """
 
+	@mock.patch('gitdh.module.ModuleLoader.getConfRegEx', new=mock.MagicMock(return_value=re.compile('^(.*\\-command|Git|DEFAULT|Database)$')))
 	def test_branches(self):
 		c = Config()
 		c.read_string(self.cStr)

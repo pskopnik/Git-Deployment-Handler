@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from gitdh import git
+from gitdh import git, module
 from collections import Mapping
 from configparser import ConfigParser
 import os.path
@@ -68,6 +68,7 @@ class Config(ConfigParser):
 class ConfigBranches(Mapping):
 	def __init__(self, cfgParser):
 		self._cfgParser = cfgParser
+		self._confRegEx = None
 
 	def keys(self):
 		return (s for s in self._cfgParser if self._isBranchSection(s))
@@ -87,5 +88,7 @@ class ConfigBranches(Mapping):
 		return self._cfgParser[key]
 
 	def _isBranchSection(self, key):
-		# lazily load module config list
-		return not key in ('Git', 'DEFAULT', 'Database') and not ("-" in key and key[key.rfind('-') + 1:] == "command")
+		if self._confRegEx == None:
+			self._confRegEx = module.ModuleLoader().getConfRegEx()
+		regEx = self._confRegEx
+		return regEx.match(key) == None
