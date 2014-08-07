@@ -113,75 +113,43 @@ Command = eff_php_crunch ${f}
 		f.close()
 
 	def test_gitRepo(self):
-		d = tempfile.TemporaryDirectory()
-		self._createGitRepo(d.name)
+		path = "/home/git/repositories/test.git"
 
-		c = Config.fromGitRepo(d.name)
-		self.assertTrue('Database' in c)
-		self.assertTrue('master' in c)
-		self.assertEqual(c['Database']['Engine'], 'sqlite')
-		self.assertEqual(c.repoPath, d.name)
+		isdir = mock.MagicMock(return_value=True)
+		git = mock.MagicMock()
+		git.return_value = git
+		git.getBranches.return_value = ["master", "development", "gitdh"]
+		confFile = mock.MagicMock()
+		confFile.getFileName.return_value = "gitdh.conf"
+		confFile.getFileContent.return_value = self.cStr
+		git.getFiles.return_value = [confFile]
 
-		c = Config.fromPath(d.name)
-		self.assertTrue('Database' in c)
-		self.assertTrue('master' in c)
-		self.assertEqual(c['Database']['Engine'], 'sqlite')
-		self.assertEqual(c.repoPath, d.name)
+		with mock.patch('gitdh.git.Git', new=git):
+			c = Config.fromGitRepo(path)
+			self.assertTrue('Database' in c)
+			self.assertTrue('master' in c)
+			self.assertEqual(c['Database']['Engine'], 'sqlite')
+			self.assertEqual(c.repoPath, path)
 
-		d.cleanup()
+			git.assert_called_once_with(path)
+			git.getBranches.assert_called_once_with()
+			git.getFiles.assert_called_once_with(branch='gitdh')
+			confFile.getFileName.assert_called_once_with()
+			confFile.getFileContent.assert_called_once_with()
 
-	def test_bareGitRepo(self):
-		d = tempfile.TemporaryDirectory()
-		self._createBareGitRepo(d.name)
+			git.reset_mock()
+			confFile.reset_mock()
 
-		c = Config.fromGitRepo(d.name)
-		self.assertTrue('Database' in c)
-		self.assertTrue('master' in c)
-		self.assertEqual(c['Database']['Engine'], 'sqlite')
-		self.assertEqual(c.repoPath, d.name)
+			with mock.patch('os.path.isdir', new=isdir):
+				c = Config.fromPath(path)
+				self.assertTrue('Database' in c)
+				self.assertTrue('master' in c)
+				self.assertEqual(c['Database']['Engine'], 'sqlite')
+				self.assertEqual(c.repoPath, path)
 
-		c = Config.fromPath(d.name)
-		self.assertTrue('Database' in c)
-		self.assertTrue('master' in c)
-		self.assertEqual(c['Database']['Engine'], 'sqlite')
-		self.assertEqual(c.repoPath, d.name)
-
-		d.cleanup()
-
-
-	def _createGitRepo(self, path):
-		check_output(('git', 'init'), cwd=path)
-
-		gC = Git(path)
-		gC._executeGitCommand('config', 'user.email test@localhost')
-		gC._executeGitCommand('config', 'user.name Test')
-
-		with open(os.path.join(path, 'README'), 'w') as f:
-			f.write('On master')
-		gC._executeGitCommand('add', '.')
-		gC._executeGitCommand('commit', '-m "Initial Import"')
-		gC._executeGitCommand('branch', 'development')
-		gC._executeGitCommand('checkout', 'development', suppressStderr=True)
-		with open(os.path.join(path, 'README'), 'w') as f:
-			f.write('On development')
-		gC._executeGitCommand('add', '.')
-		gC._executeGitCommand('commit', '-m "Development branch added"')
-
-		gC._executeGitCommand('branch', 'gitdh')
-		gC._executeGitCommand('checkout', 'gitdh', suppressStderr=True)
-		with open(os.path.join(path, 'gitdh.conf'), 'w') as f:
-			f.write(self.cStr)
-		gC._executeGitCommand('add', '.')
-		gC._executeGitCommand('commit', '-m "Gitdh conf added"')
-
-		return gC
-
-	def _createBareGitRepo(self, path):
-		d = tempfile.TemporaryDirectory()
-		self._createGitRepo(d.name)
-
-		check_output(('git', 'clone', '--bare', d.name, path))
-
-		d.cleanup()
-
-
+				git.assert_called_once_with(path)
+				git.getBranches.assert_called_once_with()
+				git.getFiles.assert_called_once_with(branch='gitdh')
+				confFile.getFileName.assert_called_once_with()
+				confFile.getFileContent.assert_called_once_with()
+				isdir.assert_called_once_with(path)
