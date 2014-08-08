@@ -72,8 +72,8 @@ def mInsertOnStatus(status, dbBe, commits):
 
 
 def insertOnStatus(status, dbBe, commit):
-		if commit.status == status:
-			insertCommit(dbBe, commit)
+	if commit.status == status:
+		insertCommit(dbBe, commit)
 
 
 def filterOnStatus(status, commits):

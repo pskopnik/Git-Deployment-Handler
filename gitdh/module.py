@@ -15,6 +15,9 @@ class Module(object):
 	def source(self):
 		return []
 
+	def postSource(self, commits):
+		pass
+
 	def filter(self, commits):
 		pass
 

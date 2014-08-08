@@ -42,6 +42,9 @@ def commitCycle(modules):
 			commits.append(Commit.fromGitCommit(inptCommit))
 
 	for module in modules:
+		module.postSource(commits)
+
+	for module in modules:
 		module.filter(commits)
 
 	for commit in commits:
