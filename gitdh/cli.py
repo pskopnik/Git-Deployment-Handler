@@ -41,6 +41,9 @@ MAILTO={2}
 
 
 def cron(*target):
+	if len(target) == 0:
+		print("Please provide at least one target, for more info call with -h", file=sys.stderr)
+		sys.exit(1)
 	for t in target:
 		gitDhMain(t, 'cron', [])
 
@@ -55,6 +58,9 @@ def postreceive(target, oldrev, newrev, refname):
 def installPostreceive(printOnly=False, force=False, quiet=False, mode='755', *target):
 	if force and printOnly:
 		print("Invalid options: --printOnly and --force both set", file=sys.stderr)
+		sys.exit(1)
+	if len(target) == 0:
+		print("Please provide at least one target, for more info call with -h", file=sys.stderr)
 		sys.exit(1)
 
 	filesToWrite = {}
@@ -109,6 +115,9 @@ def installCron(name, user=None, printOnly=False, force=False, quiet=False,
 				mailto='root', unixPath=None, interval='*/5 * * * *', mode='644', *target):
 	if force and printOnly:
 		print("Invalid options: --printOnly and --force both set", file=sys.stderr)
+		sys.exit(1)
+	if len(target) == 0:
+		print("Please provide at least one target, for more info call with -h", file=sys.stderr)
 		sys.exit(1)
 
 	if user is None:
@@ -166,5 +175,5 @@ parser = argh.ArghParser()
 parser.add_commands([cron, postreceive])
 parser.add_commands([installPostreceive, installCron], namespace="install")
 
-if __name__ == '__main__':
+def main():
 	parser.dispatch()
