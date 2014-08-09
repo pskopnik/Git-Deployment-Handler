@@ -22,7 +22,7 @@ class Git(object):
 		return repoInfo
 
 	def _executeGitCommand(self, gitCommand, options='', repositoryPath=None, suppressStderr=False):
-		if repositoryPath == None:
+		if repositoryPath is None:
 			repositoryPath = self.repositoryPath
 		cmd = 'git ' + gitCommand + ' ' + options
 		args = shlex.split(cmd)
@@ -37,16 +37,19 @@ class Git(object):
 		time = ""
 		commits = []
 		if since != None or until != None:
-			if since == None:
+			if since is None:
 				since = ""
-			if until == None:
+			if until is None:
 				until = ""
 			time = since + ".." + until
 
-		log = self._executeGitCommand('log', '--format="#|-#commit %H|tree %T|author %cn <%ce>|date %ct|message %B" {0} ./'.format(time))
+		try:
+			log = self._executeGitCommand('log', '--format="#|-#commit %H|tree %T|author %cn <%ce>|date %ct|message %B" {0} ./'.format(time))
+		except CalledProcessError:
+			raise GitException('Invalid revision range')
 		matches = re.findall('^#\|\-#commit (.{40})\|tree (.{40})\|author ([^\|]+)\|date (\d+)\|message ([^(#\|\-#)]*)', log, re.MULTILINE)
 		for match in matches:
-			commits.append(GitCommit(match[0], match[2], int(match[3]), match[4].strip(), branch, self.repositoryDir))
+			commits.append(GitCommit(match[0], match[2], int(match[3]), match[4].strip(), branch, self.repositoryPath))
 		commits.reverse()
 		return commits
 
@@ -87,10 +90,10 @@ class GitTreeNode(object):
 		self.type = type
 		self.path = path
 		self.branch = branch
-		if gitCon == None:
-			if repository == None:
+		if gitCon is None:
+			if repository is None:
 				raise GitException("No repository or gitCon given")
-			gitCon = Git(repositoryDir=repository)
+			gitCon = Git(repository)
 		self.gitCon = gitCon
 
 	def getFileName(self):
@@ -134,7 +137,7 @@ class GitCommit(object):
 
 	def getConfSection(self, config):
 		try:
-			return config[self.branch]
+			return config.branches[self.branch]
 		except KeyError:
 			return None
 

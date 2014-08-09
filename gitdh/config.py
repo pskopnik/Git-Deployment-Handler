@@ -28,7 +28,7 @@ class Config(ConfigParser):
 			if file.getFileName() == 'gitdh.conf':
 				gFile = file
 				break
-		if gFile == None:
+		if gFile is None:
 			raise Exception("No File 'gitdh.conf' in branch 'gitdh' in repository '%s'" % (repoPath,))
 
 		config = Config()
@@ -56,7 +56,7 @@ class Config(ConfigParser):
 
 	@property
 	def repoPath(self):
-		if self._repoPath == None:
+		if self._repoPath is None:
 			return self.get('Git', 'RepositoryPath', fallback=None)
 		return self._repoPath
 
@@ -88,7 +88,7 @@ class ConfigBranches(Mapping):
 		return self._cfgParser[key]
 
 	def _isBranchSection(self, key):
-		if self._confRegEx == None:
+		if self._confRegEx is None:
 			self._confRegEx = module.ModuleLoader().getConfRegEx()
 		regEx = self._confRegEx
-		return regEx.match(key) == None
+		return regEx.match(key) is None

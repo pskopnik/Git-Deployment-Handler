@@ -10,7 +10,7 @@ class Module(object):
 		self.dbBe = dbBe
 
 	def isEnabled(self, action):
-		pass
+		return False
 
 	def source(self):
 		return []
@@ -55,6 +55,11 @@ class Commit(gitdh.git.GitCommit):
 		self.removed = True
 		self.removers.append(module)
 
+	def __str__(self):
+		if self.hash is None:
+			return ''
+		return self.hash
+
 class ModuleLoader(object):
 	_objCache = {}
 
@@ -74,7 +79,7 @@ class ModuleLoader(object):
 			'gitdh.database': ({'Database'}, set())
 		}
 
-		if modulesDir == None:
+		if modulesDir is None:
 			self.modulesDir = os.path.join(os.path.dirname(__file__), 'modules')
 		else:
 			self.modulesDir = modulesDir
@@ -88,7 +93,7 @@ class ModuleLoader(object):
 		self._confPatRegEx = None
 
 	def getModules(self):
-		if not self._modules == None:
+		if not self._modules is None:
 			return self._modules
 
 		self._modules = []
@@ -101,7 +106,7 @@ class ModuleLoader(object):
 		return self._modules
 
 	def getModuleClasses(self):
-		if not self._moduleClasses == None:
+		if not self._moduleClasses is None:
 			return self._moduleClasses
 
 		self._moduleClasses = []
@@ -120,7 +125,7 @@ class ModuleLoader(object):
 		return moduleObjects
 
 	def getModuleConfTuples(self):
-		if self._moduleConfTuples == None:
+		if self._moduleConfTuples is None:
 			self._moduleConfTuples = self._fetchModConfSects()
 		return self._moduleConfTuples
 
@@ -128,7 +133,7 @@ class ModuleLoader(object):
 		return self.getModuleConfTuples().get(module, (set(), set()))
 
 	def getConfSects(self):
-		if not self._confSects == None:
+		if not self._confSects is None:
 			return self._confSects
 
 		moduleConfSects = self.getModuleConfTuples()
@@ -140,13 +145,13 @@ class ModuleLoader(object):
 		return confSects
 
 	def getConfRegEx(self):
-		if self._confRegEx == None:
+		if self._confRegEx is None:
 			self._confRegEx = self._genSectRegEx()
 
 		return self._confRegEx
 
 	def getConfPatRegEx(self):
-		if self._confPatRegEx == None:
+		if self._confPatRegEx is None:
 			self._confPatRegEx = self._genSectRegEx(patOnly=True)
 
 		return self._confPatRegEx
