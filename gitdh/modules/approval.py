@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 
 from gitdh.modules import Module
-from gitdh import gitdhutils
+from gitdh.gitdhutils import mInsertOnStatus
 
 class Approval(Module):
 	def isEnabled(self, action):
-		return (action == "postreceive" and "Database" in self.config)
+		return action == 'postreceive' and not self.dbBe is None
 
-	def preProcessing(self, commits):
+	def postSource(self, commits):
 		for commit in commits:
-			if "Approval" in self.config[commit.branch] and self.config.getboolean(commit.branch, "Approval"):
-				commit.status = "approval"
+			if self.config.branches.getboolean(commit.branch, 'Approval', False):
+				commit.status = 'approval'
 
-	def processing(self, commits):
-		gitdhutils.mInsertOnStatus("approval", self.dbBe, commits)
+	def filter(self, commits):
+		for commit in commits:
+			if commit.status == 'approval':
+				self._removeCommit(commit)
+
+	def store(self, commits):
+		mInsertOnStatus('approval', self.dbBe, commits)

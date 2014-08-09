@@ -5,13 +5,13 @@ from gitdh import gitdhutils
 
 class DatabaseLog(Module):
 	def isEnabled(self, action):
-		return (action == "postreceive" and "Database" in self.config)
+		return action == 'postreceive' and not self.dbBe is None
 
-	def preProcessing(self, commits):
+	def postSource(self, commits):
 		for commit in commits:
-			if "DatabaseLog" in self.config[commit.branch] and self.config.getboolean(commit.branch, "DatabaseLog"):
-				commit.status = "databaselog_queued"
+			if self.config.branches.getboolean(commit.branch, 'DatabaseLog', False):
+				commit.status = 'databaselog_queued'
 
-	def processing(self, commits):
-		commits = gitdhutils.filterOnStatusBase("databaselog", commits)
+	def store(self, commits):
+		commits = gitdhutils.filterOnStatusBase('databaselog', commits)
 		gitdhutils.mInsertCommit(self.dbBe, commits)
