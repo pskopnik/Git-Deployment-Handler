@@ -6,7 +6,7 @@ from gitdh.gitdhutils import filterOnStatusBase, filterOnSource, mInsertCommit, 
 from tempfile import TemporaryDirectory
 from subprocess import check_call, check_output, CalledProcessError
 from syslog import syslog, LOG_WARNING
-import re, os, shutil, os.path
+import re, os, shutil
 
 class External(Module):
 	def __init__(self, config, args, dbBe):

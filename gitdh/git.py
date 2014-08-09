@@ -2,7 +2,7 @@
 
 import shlex
 from subprocess import check_output, CalledProcessError
-import os, os.path, re
+import os, re
 
 class Git(object):
 	branchPattern = re.compile(r"[\*\s]\s(\S+)$", re.MULTILINE)
@@ -10,7 +10,7 @@ class Git(object):
 	def __init__(self, repositoryPath):
 		self.repositoryPath = repositoryPath
 		try:
-			self._executeGitCommand("rev-parse")
+			self._executeGitCommand("rev-parse", suppressStderr=True)
 		except CalledProcessError:
 			raise GitException("The directory '%s' is not a Git repository" % (repositoryPath))
 

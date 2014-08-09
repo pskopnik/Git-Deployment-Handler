@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os.path, os, re
+import os, re
 import gitdh.git
 from importlib import import_module
 
