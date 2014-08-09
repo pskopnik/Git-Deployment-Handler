@@ -32,6 +32,9 @@ class DatabaseBackend(object):
 	def setStatusWorking(self, commit):
 		self.setStatus(commit, commit.status[:commit.status.rfind('_')] + '_working')
 
+	def setStatusSkipped(self, commit):
+		self.setStatus(commit, commit.status[:commit.status.rfind('_')] + '_skipped')
+
 	def setStatusFinished(self, commit):
 		self.setStatus(commit, commit.status[:commit.status.rfind('_')] + '_finished')
 

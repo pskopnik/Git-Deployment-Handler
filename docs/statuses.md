@@ -1,27 +1,31 @@
-STATUSES
-=========
+#Statuses
 
 ##New statuses:
 
 deployment_queued
 deployment_working
+deployment_skipped
 deployment_finished
 
 approval
 approval_queued
 approval_working
+approval_skipped
 approval_finished
 
 crondepl_queued
 crondepl_working
+crondepl_skipped
 crondepl_finished
 
 databaselog_queued
 databaselog_working
+databaselog_skipped
 databaselog_finished
 
 external_queued
 external_working
+external_skipped
 external_finished
 
 ##Old statuses:
