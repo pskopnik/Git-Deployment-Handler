@@ -8,7 +8,7 @@ with open('README.rst') as file:
 
 setup(
 		name='gitdh',
-		version='0.7.dev2',
+		version='0.7.dev3',
 		description='A python tool to deploy git commits using post-receive hooks and cron',
 		long_description=long_description,
 		author='Seoester',

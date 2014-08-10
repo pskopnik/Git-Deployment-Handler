@@ -123,7 +123,7 @@ class GitTreeNode(object):
 
 
 class GitCommit(object):
-	def __init__(self, hash, author, date, message, branch, repository, id=None, status=None, approver=None, approverDate=None):
+	def __init__(self, hash, author, date, message, branch, repository, id=None, status=None):
 		self.id = id
 		self.hash = hash
 		self.author = author
@@ -132,8 +132,6 @@ class GitCommit(object):
 		self.branch = branch
 		self.repository = repository
 		self.status = status
-		self.approver = approver
-		self.approverDate = approverDate
 
 	def getConfSection(self, config):
 		try:

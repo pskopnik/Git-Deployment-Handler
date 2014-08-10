@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from copy import copy
 from gitdh.git import GitCommit
 
 class DatabaseBackend(object):
 	@staticmethod
 	def getDatabaseBackend(config):
-		dbEngine = config["Database"]["Engine"]
-		if dbEngine == "mysql":
+		dbEngine = config['Database']['Engine']
+		if dbEngine == 'mysql':
 			db = MySQL(config)
-		elif dbEngine == "mongodb":
+		elif dbEngine == 'mongodb':
 			db = MongoDB(config)
-		elif dbEngine == "sqlite":
+		elif dbEngine == 'sqlite':
 			db = SQLite(config)
 		else:
 			raise Exception("Unknown Database Engine")
@@ -46,36 +45,36 @@ class MySQL(DatabaseBackend):
 	def __init__(self, config):
 		import pymysql
 		DatabaseBackend.__init__(self, config)
-		confSection = config["Database"]
-		self.conn = pymysql.connect(host=confSection["Host"], port=config.getint("Database", "Port"), user=confSection["User"], passwd=confSection["Password"], db=confSection["Database"])
+		confSection = config['Database']
+		self.conn = pymysql.connect(host=confSection['Host'], port=config.getint('Database', 'Port'), user=confSection['User'], passwd=confSection['Password'], db=confSection['Database'])
 		self.cur = self.conn.cursor()
-		self.tableName = confSection["Table"]
+		self.tableName = confSection['Table']
 
 	def getQueuedCommits(self):
-		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status`, `approver`, `approverdate` FROM `{0}` WHERE status LIKE '%\_queued' ORDER BY `date` ASC".format(self.tableName))
+		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status` FROM `{0}` WHERE status LIKE '%\_queued' ORDER BY `date` ASC".format(self.tableName))
 		commits = []
 		for dbCommit in self.cur.fetchall():
-			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9]))
+			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7]))
 		return commits
 
 	def getAllCommits(self):
-		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status`, `approver`, `approverdate` FROM `{0}` ORDER BY `date` ASC".format(self.tableName))
+		self.cur.execute('SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status` FROM `{0}` ORDER BY `date` ASC'.format(self.tableName))
 		commits = []
 		for dbCommit in self.cur.fetchall():
-			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9]))
+			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7]))
 		return commits
 
 	def insertCommit(self, commit):
 		params = (commit.hash, commit.author, commit.date, commit.message, commit.status, commit.repository, commit.branch)
-		self.cur.execute("INSERT INTO `{0}` (`hash`, `author`, `date`, `message`, `status`, `repository`, `branch`) VALUES (%s, %s, %s, %s, %s, %s, %s)".format(self.tableName), params)
+		self.cur.execute('INSERT INTO `{0}` (`hash`, `author`, `date`, `message`, `status`, `repository`, `branch`) VALUES (%s, %s, %s, %s, %s, %s, %s)'.format(self.tableName), params)
 		self.cur.connection.commit()
 		commit.id = self.cur.lastrowid
 
 	def setStatus(self, commit, status):
 		commit.status = status
-		if hasattr(commit, "id") and commit.id != None:
+		if hasattr(commit, 'id') and commit.id != None:
 			params = (status, commit.id)
-			self.cur.execute("UPDATE `{0}` SET `status`=%s WHERE `id`=%s".format(self.tableName), params)
+			self.cur.execute('UPDATE `{0}` SET `status`=%s WHERE `id`=%s'.format(self.tableName), params)
 			self.cur.connection.commit()
 
 	def __del__(self):
@@ -86,10 +85,10 @@ class SQLite(MySQL):
 	def __init__(self, config):
 		import sqlite3
 		DatabaseBackend.__init__(self, config)
-		confSection = config["Database"]
-		self.conn = sqlite3.connect(confSection["DatabaseFile"])
+		confSection = config['Database']
+		self.conn = sqlite3.connect(confSection['DatabaseFile'])
 		self.cur = self.conn.cursor()
-		self.tableName = confSection["Table"]
+		self.tableName = confSection['Table']
 		self._createTable()
 
 	def _createTable(self):
@@ -100,8 +99,6 @@ CREATE TABLE IF NOT EXISTS {0} (
   `author` TEXT NOT NULL,
   `date` INTEGER NOT NULL,
   `message` text NOT NULL,
-  `approver` TEXT NULL,
-  `approverdate` INTEGER NULL,
   `status` TEXT NOT NULL,
   `repository` TEXT NOT NULL,
   `branch` TEXT NOT NULL
@@ -109,10 +106,10 @@ CREATE TABLE IF NOT EXISTS {0} (
 		self.conn.commit()
 
 	def getQueuedCommits(self):
-		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status`, `approver`, `approverdate` FROM `{0}` WHERE status LIKE '%_queued' ORDER BY `date` ASC".format(self.tableName))
+		self.cur.execute("SELECT `id`, `hash`, `author`, `date`, `message`, `branch`, `repository`, `status` FROM `{0}` WHERE status LIKE '%_queued' ORDER BY `date` ASC".format(self.tableName))
 		commits = []
 		for dbCommit in self.cur.fetchall():
-			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7], approver=dbCommit[8], approverDate=dbCommit[9]))
+			commits.append(GitCommit(dbCommit[1], dbCommit[2], dbCommit[3], dbCommit[4], dbCommit[5], dbCommit[6], id=dbCommit[0], status=dbCommit[7]))
 		return commits
 
 	def insertCommit(self, commit):
@@ -123,9 +120,9 @@ CREATE TABLE IF NOT EXISTS {0} (
 
 	def setStatus(self, commit, status):
 		commit.status = status
-		if hasattr(commit, "id") and commit.id != None:
+		if hasattr(commit, 'id') and commit.id != None:
 			params = (status, commit.id)
-			self.cur.execute("UPDATE `{0}` SET `status`=? WHERE `id`=?".format(self.tableName), params)
+			self.cur.execute('UPDATE `{0}` SET `status`=? WHERE `id`=?'.format(self.tableName), params)
 			self.cur.connection.commit()
 
 
@@ -133,35 +130,36 @@ class MongoDB(DatabaseBackend):
 	def __init__(self, config):
 		import pymongo
 		DatabaseBackend.__init__(self, config)
-		confSection = config["Database"]
-		self.client = pymongo.MongoClient(host=confSection["Host"], port=config.getint("Database", "Port"))
-		self.coll = self.client[confSection["Database"]][confSection["Collection"]]
+		confSection = config['Database']
+		self.client = pymongo.MongoClient(host=confSection['Host'], port=config.getint('Database', 'Port'))
+		self.coll = self.client[confSection['Database']][confSection['Collection']]
 
 	def getQueuedCommits(self):
-		jsonCommits = self.coll.find({"status": {"$regex": "_queued$"}}, ["_id", "hash", "author", "date", "message", "branch", "repository", "status", "approver", "approverDate"]).sort("date")
+		jsonCommits = self.coll.find({'status': {'$regex': '_queued$'}}, ['_id', 'hash', 'author', 'date', 'message', 'branch', 'repository', 'status']).sort('date')
 		commits = []
 		for jsonCommit in jsonCommits:
-			commits.append(GitCommit(jsonCommit["hash"], jsonCommit["author"], jsonCommit["date"], jsonCommit["message"], jsonCommit["branch"], jsonCommit["repository"], id=jsonCommit["_id"], status=jsonCommit["status"], approver=jsonCommit["approver"], approverDate=jsonCommit["approverDate"]))
+			commits.append(GitCommit(jsonCommit['hash'], jsonCommit['author'], jsonCommit['date'], jsonCommit['message'], jsonCommit['branch'], jsonCommit['repository'], id=jsonCommit['_id'], status=jsonCommit['status']))
 		return commits
 
 	def getAllCommits(self):
-		jsonCommits = self.coll.find({}, ["_id", "hash", "author", "date", "message", "branch", "repository", "status", "approver", "approverDate"]).sort("date")
+		jsonCommits = self.coll.find({}, ['_id', 'hash', 'author', 'date', 'message', 'branch', 'repository', 'status']).sort('date')
 		commits = []
 		for jsonCommit in jsonCommits:
-			commits.append(GitCommit(jsonCommit["hash"], jsonCommit["author"], jsonCommit["date"], jsonCommit["message"], jsonCommit["branch"], jsonCommit["repository"], id=jsonCommit["_id"], status=jsonCommit["status"], approver=jsonCommit["approver"], approverDate=jsonCommit["approverDate"]))
+			commits.append(GitCommit(jsonCommit['hash'], jsonCommit['author'], jsonCommit['date'], jsonCommit['message'], jsonCommit['branch'], jsonCommit['repository'], id=jsonCommit['_id'], status=jsonCommit['status']))
 		return commits
 
 	def insertCommit(self, commit):
-		commitCopy = copy(commit)
-		del commitCopy.id
-		jsonCommit = commitCopy.__dict__
-		self.coll.insert(jsonCommit)
-		commit.id = jsonCommit['_id']
+		keys = {'hash', 'author', 'date', 'message', 'branch', 'repository', 'status'}
+		commitDict = {}
+		for key in keys:
+			commitDict[key] = getattr(commit, key)
+		self.coll.insert(commitDict)
+		commit.id = commitDict['_id']
 
 	def setStatus(self, commit, status):
 		commit.status = status
-		if hasattr(commit, "id") and commit.id != None:
-			self.coll.update({"_id": commit.id}, {"$set": {"status": status}})
+		if hasattr(commit, 'id') and commit.id != None:
+			self.coll.update({'_id': commit.id}, {'$set': {'status': status}})
 
 	def __del__(self):
 		self.client.disconnect()
