@@ -18,7 +18,7 @@ class External(Module):
 
 	def source(self):
 		returnCommits = []
-		if not self.config.getboolean('Git', 'External', False):
+		if not self.config.getboolean('Git', 'External', fallback=False):
 			return returnCommits
 
 		with open(os.devnull, 'w') as devNull:
@@ -26,16 +26,17 @@ class External(Module):
 				branch = confSect.name
 				tmpDir = TemporaryDirectory()
 				self.tmpDirs.append(tmpDir)
-				cloneSource = self.config.repoPath
+				source = self.config.repoPath
+				cloneSource = source
 
 				dbLog = filterOnStatusBase("external", filterOnSource(cloneSource, self.dbBe.getAllCommits()))
 				dbLog = sorted(dbLog, key=lambda commit: commit.date)
 
-				with SSHEnvironment(cloneSource, confSect) as sshCloneSource:
+				with SSHEnvironment(cloneSource, self.config) as sshCloneSource:
 					if not sshCloneSource is None:
 						cloneSource = sshCloneSource
 					try:
-						returnCommits += self._doMainClone(cloneSource, branch, tmpDir.name, dbLog, devNull)
+						returnCommits += self._doMainClone(source, cloneSource, branch, tmpDir.name, dbLog, devNull)
 					except CalledProcessError as err:
 						syslog(LOG_WARNING, "CalledProcessError for branch '%s': '%s'"% (branch, err))
 
@@ -48,52 +49,51 @@ class External(Module):
 	def store(self, commits):
 		mInsertCommit(self.dbBe, filterOnStatusBase('external', commits))
 
-	def _doMainClone(self, cloneSource, branch, target, dbLog, devNull):
+	def _doMainClone(self, source, cloneSource, branch, repo, dbLog, devNull):
 		args = ('git', 'ls-remote', cloneSource, branch)
-		output = check_output(args, cwd=target, stderr=devNull)
+		output = check_output(args, cwd=repo, stderr=devNull)
 		if len(output) == 0:
 			syslog(LOG_WARNING, "No branch '%s' in '%s'" % (branch, cloneSource))
 			return []
 
 		if len(dbLog) == 0:
-			args = ('git', 'clone', '-q', '-b', branch, cloneSource, target)
+			args = ('git', 'clone', '-q', '-b', branch, cloneSource, repo)
 			depth = None
 		else:
 			output = output.decode('utf-8')
 			if output[:40] == dbLog[-1].hash:
 				return []
 			depth = 5
-			args = ('git', 'clone', '-q', '--depth', str(depth), '-b', branch, cloneSource, target)
+			args = ('git', 'clone', '-q', '--depth', str(depth), '-b', branch, cloneSource, repo)
 
 		while True:
-			check_call(args, cwd=target, stdout=devNull, stderr=devNull)
+			check_call(args, cwd=repo, stdout=devNull, stderr=devNull)
 			try:
-				return self._catchUp(target, branch, dbLog)
+				return self._catchUp(repo, branch, dbLog, source)
 			except NewCommitsNotReachedError:
 				try:
 					depth += 10
 					args = ('git', 'fetch', '--depth', str(depth))
 				except TypeError:
-					return self._catchUp(target, branch, [])
+					return self._catchUp(repo, branch, [], source)
 
-	def _catchUp(self, repo, branch, dbLog):
+	def _catchUp(self, repo, branch, dbLog, source):
 		returnCommits = []
-		git = Git(repositoryDir=repo)
+		git = Git(repo)
 		gitLog = git.getLog(branch=branch)
 		if len(dbLog) > 0:
 			lastDbLog = dbLog[-1]
-		reachedNewCommits = len(dbLog) == 0
+			reachedNewCommits = False
+		else:
+			reachedNewCommits = True
 		for gitLogCommit in gitLog:
-			try:
-				if reachedNewCommits:
-					gitLogCommit.status = 'external_queued'
-					gitLogCommit.deploymentSource = repo
-					gitLogCommit.repository = source
-					returnCommits.append(gitLogCommit)
-				elif gitLogCommit.hash == lastDbLog.hash:
-					reachedNewCommits = True
-			except NameError:
-				pass
+			if reachedNewCommits:
+				gitLogCommit.status = 'external_queued'
+				gitLogCommit.deploymentSource = repo
+				gitLogCommit.repository = source
+				returnCommits.append(gitLogCommit)
+			elif gitLogCommit.hash == lastDbLog.hash:
+				reachedNewCommits = True
 
 		if not reachedNewCommits:
 			raise NewCommitsNotReachedError()
@@ -103,8 +103,9 @@ class External(Module):
 class SSHEnvironment(object):
 	gitSshUrlPattern = re.compile('^(ssh://)?(?P<user>\w+)@(?P<host>[^:/]+):?(?P<port>\d+)?(:|/)(?P<repositoryPath>.+)$')
 
-	def __init__(self, source, confSect):
-		self.confSect = confSect
+	def __init__(self, source, config):
+		self.source = source
+		self.config = config
 
 	def __enter__(self):
 		matchObj = SSHEnvironment.gitSshUrlPattern.match(self.source)
@@ -125,8 +126,10 @@ class SSHEnvironment(object):
 
 		tmpHostName = generateRandomString(20)
 		sshConf = "\n\nHost {0}\n\tHostName {1}\n\tUser {2}\n\tPort {3}\n\tStrictHostKeyChecking no\n".format(tmpHostName, sshHost, sshUser, sshPort)
-		if "IdentityFile" in self.confSect:
-			sshConf += "\tIdentityFile {0}\n".format(self.confSect["IdentityFile"])
+		try:
+			sshConf += "\tIdentityFile {0}\n".format(self.config['Git']['IdentityFile'])
+		except KeyError:
+			pass
 		cloneSource = 'ssh://{0}/{1}'.format(tmpHostName, sshRepositoryPath)
 
 		sshConfigDirName = os.path.join(os.environ['HOME'], '.ssh')

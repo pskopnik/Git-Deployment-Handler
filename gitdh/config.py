@@ -70,6 +70,11 @@ class ConfigBranches(Mapping):
 		self._cfgParser = cfgParser
 		self._confRegEx = None
 
+	def getboolean(self, section, option, fallback=None, *, raw=False, vars=None):
+		if not self._isBranchSection(section):
+			return fallback
+		return self._cfgParser.getboolean(section, option, fallback=fallback, raw=raw, vars=vars)
+
 	def keys(self):
 		return (s for s in self._cfgParser if self._isBranchSection(s))
 

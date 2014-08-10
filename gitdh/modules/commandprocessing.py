@@ -9,8 +9,8 @@ from syslog import syslog, LOG_WARNING
 CONFIG_SECTION_PATTERNS = {'*-command'}
 
 class CommandProcessing(Module):
-	def __init__(self):
-		super().__init__()
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 		self._regExpCache = {}
 
 	def isEnabled(self, action):
@@ -40,14 +40,15 @@ class CommandProcessing(Module):
 
 		confSect = self.config[command + '-command']
 		configMode = confSect.get('Mode', 'once')
-		suppressOutput = confSect.get('SuppressOutput', True)
+		suppressOutput = confSect.getboolean('SuppressOutput', True)
+		shell = confSect.getboolean('Shell', False)
 		if configMode == 'once':
-			self._executePathCommand(confSect['Command'], path, path, suppressOutput)
-		elif configMode == 'perfile':
+			self._executePathCommand(confSect['Command'], path, path, suppressOutput, shell)
+		elif configMode == 'file':
 			regExpStmt = confSect.get('RegExp', None)
 			files = self._getFiles(path, regExpStmt=regExpStmt)
 			for file in files:
-				self._executePathCommand(confSect['Command'], file, path, suppressOutput)
+				self._executePathCommand(confSect['Command'], file, path, suppressOutput, shell)
 
 	def _getFiles(self, path, regExpStmt=None):
 		checkRegExp = False
@@ -60,18 +61,28 @@ class CommandProcessing(Module):
 				self._regExpCache[regExpStmt] = regExp
 
 		allFiles = []
-		for root, dirs, files in os.walk(path):
-			for file in files:
-				path = join(root, file)
+		for root, dirs, files in os.walk(path, topdown=True):
+			dirs[:] = [d for d in dirs if not d == '.git']
+			for f in files:
+				if f[:4] == '.git':
+					continue
+				path = join(root, f)
 				if not checkRegExp or not regExp.search(path) is None:
 					allFiles.append(path)
 		return allFiles
 
-	def _executePathCommand(self, command, path, basepath, suppressOutput):
+	def _executePathCommand(self, command, path, basepath, suppressOutput, shell):
 		command = command.replace('${f}', "'" + path + "'")
-		args = shlex.split(command)
-		if suppressOutput:
-			with open(os.devnull, mode='w') as fd:
-				return check_call(args, cwd=basepath, stdout=fd, stderr=fd)
+		if shell:
+			if suppressOutput:
+				with open(os.devnull, mode='w') as fd:
+					return check_call(command, cwd=basepath, stdout=fd, stderr=fd, shell=shell)
+			else:
+				return check_call(command, cwd=basepath, shell=shell)
 		else:
-			return check_call(args, cwd=basepath)
+			args = shlex.split(command)
+			if suppressOutput:
+				with open(os.devnull, mode='w') as fd:
+					return check_call(args, cwd=basepath, stdout=fd, stderr=fd, shell=shell)
+			else:
+				return check_call(args, cwd=basepath, shell=shell)

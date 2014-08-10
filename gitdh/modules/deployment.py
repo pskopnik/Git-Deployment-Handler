@@ -19,30 +19,33 @@ class Deployment(Module):
 				branches[commit.branch] = []
 			branches[commit.branch].append(commit)
 
-		for branch in branches:
+		for branch in branches.values():
 			sortedCommits = sorted(branch, key=lambda commit: commit.date)
 			for commit in sortedCommits[:-1]:
 				self._removeCommit(commit)
 
 	def processRemoved(self, commits):
-		for commit in commits:
-			if commit.removers == [self]:
-				self.dbBe.setStatusSkipped(commit)
+		if not self.dbBe is None:
+			for commit in commits:
+				if commit.removers == [self]:
+					self.dbBe.setStatusSkipped(commit)
 
 	def process(self, commits):
 		commits = filterOnStatusExt('queued', commits)
 		for commit in commits:
-			self.dbBe.setStatusWorking(commit)
+			if not self.dbBe is None:
+				self.dbBe.setStatusWorking(commit)
 
 			confSection = self.config.branches[commit.branch]
 			rmIntGitFiles = confSection.getboolean('RmIntGitFiles', True)
 			if not hasattr(commit, 'deploymentSource'):
 				commit.deploymentSource = self.config.repoPath
-			syslog(LOG_INFO, "Deploying commit '%s' from '%s' : '%s'" % (commit, commit.repository, commit.branch))
+			syslog(LOG_INFO, "Deploying commit '%s' from '%s' : '%s' to '%s'" % (commit, commit.repository, commit.branch, confSection['Path']))
 
 			self._deleteUpdateRepo(confSection['Path'], commit.deploymentSource, commit.branch, commit, rmIntGitFiles=rmIntGitFiles)
 
-			self.dbBe.setStatusFinished(commit)
+			if not self.dbBe is None:
+				self.dbBe.setStatusFinished(commit)
 
 	def _deleteUpdateRepo(self, path, sourceRepository, branch, commit, rmIntGitFiles=True):
 		path = abspath(path)
@@ -66,14 +69,13 @@ class Deployment(Module):
 		with open(os.devnull, 'w') as devNull:
 			try:
 				check_call(args, cwd=path, stdout=devNull, stderr=devNull)
-
 				if not commit is None:
 					args = ('git', 'checkout', commit.hash)
 					check_call(args, cwd=path, stdout=devNull, stderr=devNull)
 					args = ('git', 'reset', '--hard', '-q')
 					check_call(args, cwd=path, stdout=devNull, stderr=devNull)
 				if rmIntGitFiles:
-					self._rmIntGitFiles()
+					self._rmIntGitFiles(path)
 			except CalledProcessError as e:
 				syslog(LOG_WARNING, "Git Error: '%s'" % (e,))
 

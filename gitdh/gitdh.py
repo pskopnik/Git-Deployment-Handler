@@ -15,7 +15,7 @@ def gitDhMain(target, action, args, dbBe=None):
 
 	enabledModules = []
 
-	modules = ModuleLoader.initModuleObjects(config, args, dbBe)
+	modules = ModuleLoader().initModuleObjects(config, args, dbBe)
 	for module in modules:
 		if module.isEnabled(action):
 			enabledModules.append(module)

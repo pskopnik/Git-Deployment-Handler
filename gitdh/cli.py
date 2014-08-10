@@ -48,6 +48,7 @@ def cron(*target):
 		gitDhMain(t, 'cron', [])
 
 def postreceive(target, oldrev, newrev, refname):
+	del os.environ['GIT_DIR']
 	gitDhMain(target, 'postreceive', [oldrev, newrev, refname])
 
 @argh.named('postreceive')
