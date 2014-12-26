@@ -2,7 +2,7 @@ Git Deployment Handler
 ======================
 
 The Git Deployment Handler is a tool for automatic deployment of git
-commits from local or remote repositories into directories.
+commits from local or remote repositories into (local) directories.
 
 Some advanced features require a database; SQlite, MongoDb and MySQL are
 the supported database backends. The Git Deployment Handler uses
@@ -60,7 +60,7 @@ a git repository (named ``gitdh.conf`` in a ``gitdh`` branch).
 Additional Options:
 
 -  ``External`` - ``True`` or ``False``, whether the Source is an
-   external (i.e. remote) repository (requires a database); default
+   external (i.e. remote) repository; (requires a database); default
    ``False``
 -  ``IdentityFile`` - May contain the path of an IdentityFile (as in
    .ssh/config) when External is used and Source is a SSH URL; default
@@ -90,10 +90,10 @@ Additional Options:
    be logged to the database; default ``False``
 -  ``CronDeployment`` - ``True`` or ``False``, whether every commit
    should be inserted into the database and deployed by cron job instead
-   of being deploying directly; default ``False``
+   of being deploying directly; (requires a database); default ``False``
 -  ``Approval`` - ``True`` or ``False``, whether every commit has to be
    first approved in the database and is then deployed by cron job;
-   default ``False``
+   (requires a database); default ``False``
 -  ``Preprocessing`` - space separated list of commands to be performed
    before deploying any commits; default \`\` (empty)
 -  ``Postprocessing`` - space separated list of commands to be performed
@@ -126,7 +126,7 @@ database backend has its own further options:
     Engine = mongodb
     Host = localhost
     Port = 27017
-    Database = git-commits
+    Database = gitdh
     Collection = commits
 
     # SQLite

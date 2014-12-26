@@ -1,0 +1,12 @@
+# Simple configuration, deploy two branches from local repository using a
+# post-receive hook
+#
+# Install post-receive hook with `git-dh install postreceive CONFFILE`
+[Git]
+RepositoryPath = /var/lib/gitolite/repositories/website.git
+
+[stable]
+Path = /home/www/stable
+
+[master]
+Path = /home/www/development

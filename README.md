@@ -1,7 +1,7 @@
 Git Deployment Handler
 =======================
 
-The Git Deployment Handler is a tool for automatic deployment of git commits from local or remote repositories into directories.
+The Git Deployment Handler is a tool for automatic deployment of git commits from local or remote repositories into (local) directories.
 
 Some advanced features require a database; SQlite, MongoDb and MySQL are the supported database backends.
 The Git Deployment Handler uses post-receive hooks and cron jobs (services in future) to automatically deploy commits.
@@ -41,7 +41,7 @@ This setting can be omitted when the config file is placed in a git repository (
 
 Additional Options:
 
- * `External` - `True` or `False`, whether the Source is an external (i.e. remote) repository (requires a database); default `False`
+ * `External` - `True` or `False`, whether the Source is an external (i.e. remote) repository; (requires a database); default `False`
  * `IdentityFile` - May contain the path of an IdentityFile (as in .ssh/config) when External is used and Source is a SSH URL; default `None`
 
 ###Branches
@@ -56,8 +56,8 @@ Additional Options:
  * `RmGitIntFiles` - `True` or `False`, whether internal git files should be deleted (`.git/`, `.gitignore`, `.gitmodules`); default `True`
  * `Recursive` - `True` or `False`, whether a clone should be `recursive`, i.e. submodules should be cloned out as well; default `True`
  * `DatabaseLog` - `True` or `False`, whether every commit should be logged to the database; default `False`
- * `CronDeployment` - `True` or `False`, whether every commit should be inserted into the database and deployed by cron job instead of being deploying directly; default `False`
- * `Approval` - `True` or `False`, whether every commit has to be first approved in the database and is then deployed by cron job; default `False`
+ * `CronDeployment` - `True` or `False`, whether every commit should be inserted into the database and deployed by cron job instead of being deploying directly; (requires a database); default `False`
+ * `Approval` - `True` or `False`, whether every commit has to be first approved in the database and is then deployed by cron job; (requires a database); default `False`
  * `Preprocessing` - space separated list of commands to be performed before deploying any commits; default `` (empty)
  * `Postprocessing` - space separated list of commands to be performed after deploying all commits; default `` (empty)
 
@@ -84,7 +84,7 @@ Each database backend has its own further options:
 	Engine = mongodb
 	Host = localhost
 	Port = 27017
-	Database = git-commits
+	Database = gitdh
 	Collection = commits
 
 	# SQLite

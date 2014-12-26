@@ -1,0 +1,27 @@
+# Configuration of a local repository containing a puppet module.
+# Deployment is done via cron job due to the lack of permissions of the
+# gitolite user (which is used to execute the post-receive hook).
+# Commits are stored in a local MongoDB database.
+# Internal git files, i.e. the .git/ directory, ..., are not removed after
+# deployment so it will be possible to inspect code changes manually at
+# any point in time.
+#
+# Install post-receive hook with `git-dh install postreceive CONFFILE`
+# Install cron job with `git-dh install cron CRONJOBNAME CONFFILE`
+# Ensure the cron job user has the necessary permissions to write to the
+# deployment directory.
+[Git]
+RepositoryPath = /var/lib/gitolite/repositories/Puppet-Backup.git
+
+[Database]
+Engine = mongodb
+Host = localhost
+Port = 27017
+Database = gitdh
+Collection = commits
+
+# Deploy the stable branch to /etc/puppet/modules/backup
+[stable]
+Path = /etc/puppet/modules/backup
+RmGitIntFiles = False
+CronDeployment = True

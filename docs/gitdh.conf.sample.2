@@ -1,0 +1,17 @@
+# Simple configuration of an external repository using an SQLite database
+#
+# Install cron job with `git-dh install cron CRONJOBNAME CONFFILE`
+# Ensure the cron job user has the necessary permissions to write to the
+# deployment directory.
+[Git]
+RepositoryPath = git@github.com:you/Your-Project.git
+External = True
+IdentityFile = /home/gitdh/github_deploy
+
+[Database]
+Engine = sqlite
+DatabaseFile = /var/lib/gitolite/data.sqlite
+Table = commits
+
+[stable]
+Path = /opt/Your-Project

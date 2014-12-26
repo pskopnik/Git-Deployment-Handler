@@ -1,0 +1,26 @@
+# Deploy a webapp from an external source (a self-hosted gitlab server).
+# Don't clone recursively as git submodules used during development are
+# deployed separately.
+# Uses a local MySQL server to store commits.
+#
+# Install cron job with `git-dh install cron CRONJOBNAME CONFFILE`
+# Ensure the cron job user has the necessary permissions to write to the
+# deployment directory.
+[Git]
+RepositoryPath = git@gitlab.your.domain:you/webapp.git
+External = True
+IdentityFile =/home/www/deployment_rsa_key
+
+[Database]
+Engine = mysql
+Host = localhost
+Port = 3306
+User = gitdh
+Password = ###randompassword###
+Database = gitdh
+Table = commits
+
+# Deploy the master branch to /home/www/webapp
+[master]
+Path = /home/www/webapp
+Recursive = False
