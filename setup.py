@@ -2,9 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
+import sys
 
 with open('README.rst') as file:
 	long_description = file.read()
+
+extras = {}
+if sys.version_info < (3,3):
+	extras['tests_require'] = ['mock']
 
 setup(
 		name='gitdh',
@@ -28,6 +33,7 @@ setup(
 			'mongodb': ['pymongo'],
 			'mysql': ['pymysql']
 		},
+		test_suite = "gitdh.tests",
 		classifiers=[
 			'Development Status :: 4 - Beta',
 			'License :: OSI Approved :: MIT License',
@@ -38,4 +44,5 @@ setup(
 			'Programming Language :: Python :: 3.4',
 			'Topic :: Software Development :: Version Control',
 		],
+		**extras
 	)

@@ -1,3 +1,3 @@
 #!/bin/sh
 
-python3 -m unittest gitdh.tests
+python -m unittest  discover -v -s gitdh/tests -p '*.py'
