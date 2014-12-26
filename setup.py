@@ -12,29 +12,31 @@ if sys.version_info < (3,3):
 	extras['tests_require'] = ['mock']
 
 setup(
-		name='gitdh',
-		version='0.7',
-		description='A python tool to deploy git commits using post-receive hooks and cron',
-		long_description=long_description,
-		author='Seoester',
-		author_email='seoester@googlemail.com',
-		license='MIT',
-		url='https://github.com/seoester/Git-Deployment-Handler',
-		packages=['gitdh', 'gitdh.modules'],
-		install_requires=[
+		name = 'gitdh',
+		version = '0.7',
+		description = 'A python tool to deploy git commits using post-receive hooks and cron',
+		long_description = long_description,
+		author = 'Seoester',
+		author_email = 'seoester@googlemail.com',
+		license = 'MIT',
+		url = 'https://github.com/seoester/Git-Deployment-Handler',
+		provides = ['argh'],
+		packages = ['gitdh', 'gitdh.modules'],
+		install_requires = [
 			"argh>=0.25"
 		],
-		entry_points={
+		entry_points = {
 			'console_scripts': [
 				'git-dh=gitdh.cli:main'
 			]
 		},
-		extras_require={
+		extras_require = {
 			'mongodb': ['pymongo'],
 			'mysql': ['pymysql']
 		},
 		test_suite = "gitdh.tests",
-		classifiers=[
+		keywords = "git deploy deployment commit database remote approval cron post-receive hook",
+		classifiers = [
 			'Development Status :: 4 - Beta',
 			'License :: OSI Approved :: MIT License',
 			'Operating System :: POSIX :: Linux',
