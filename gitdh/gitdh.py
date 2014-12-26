@@ -11,7 +11,7 @@ def gitDhMain(target, action, args, dbBe=None):
 		raise Exception("Missing RepositoryPath in '%s'" % (target,))
 
 	if dbBe is None and 'Database' in config:
-		dbBe = DatabaseBackend.getDatabaseBackend(config=config)
+		dbBe = DatabaseBackend.getDatabaseBackend(config)
 
 	enabledModules = []
 

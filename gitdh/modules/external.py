@@ -4,9 +4,10 @@ from gitdh.modules import Module
 from gitdh.git import Git
 from gitdh.gitdhutils import filterOnStatusBase, filterOnSource, mInsertCommit, generateRandomString
 from tempfile import TemporaryDirectory
-from subprocess import check_call, check_output, CalledProcessError
+from subprocess import check_call, check_output, CalledProcessError, DEVNULL
 from syslog import syslog, LOG_WARNING
-import re, os, shutil
+from distutils.version import LooseVersion
+import re, os, shutil, time
 
 class External(Module):
 	def __init__(self, config, args, dbBe):
@@ -21,24 +22,23 @@ class External(Module):
 		if not self.config.getboolean('Git', 'External', fallback=False):
 			return returnCommits
 
-		with open(os.devnull, 'w') as devNull:
-			for confSect in self.config.branches.values():
-				branch = confSect.name
-				tmpDir = TemporaryDirectory()
-				self.tmpDirs.append(tmpDir)
-				source = self.config.repoPath
-				cloneSource = source
+		for confSect in self.config.branches.values():
+			branch = confSect.name
+			tmpDir = TemporaryDirectory()
+			self.tmpDirs.append(tmpDir)
+			source = self.config.repoPath
+			cloneSource = source
 
-				dbLog = filterOnStatusBase("external", filterOnSource(cloneSource, self.dbBe.getAllCommits()))
-				dbLog = sorted(dbLog, key=lambda commit: commit.date)
+			dbLog = filterOnStatusBase("external", filterOnSource(source, self.dbBe.getAllCommits()))
+			dbLog = sorted(dbLog, key=lambda commit: commit.date)
 
-				with SSHEnvironment(cloneSource, self.config) as sshCloneSource:
-					if not sshCloneSource is None:
-						cloneSource = sshCloneSource
-					try:
-						returnCommits += self._doMainClone(source, cloneSource, branch, tmpDir.name, dbLog, devNull)
-					except CalledProcessError as err:
-						syslog(LOG_WARNING, "CalledProcessError for branch '%s': '%s'"% (branch, err))
+			with SSHEnvironment(cloneSource, self.config) as sshCloneSource:
+				if not sshCloneSource is None:
+					cloneSource = sshCloneSource
+				try:
+					returnCommits += self._doClone(source, cloneSource, branch, tmpDir.name, dbLog)
+				except CalledProcessError as err:
+					syslog(LOG_WARNING, "CalledProcessError for branch '%s' in '%s': '%s'"% (branch, source, err))
 
 			return returnCommits
 
@@ -49,16 +49,23 @@ class External(Module):
 	def store(self, commits):
 		mInsertCommit(self.dbBe, filterOnStatusBase('external', commits))
 
-	def _doMainClone(self, source, cloneSource, branch, repo, dbLog, devNull):
+	def _doClone(self, source, cloneSource, branch, repo, dbLog):
 		args = ('git', 'ls-remote', cloneSource, branch)
-		output = check_output(args, cwd=repo, stderr=devNull)
+		output = check_output(args, cwd=repo, stderr=DEVNULL)
 		if len(output) == 0:
-			syslog(LOG_WARNING, "No branch '%s' in '%s'" % (branch, cloneSource))
+			syslog(LOG_WARNING, "No branch '%s' in '%s'" % (branch, source))
 			return []
 
-		if len(dbLog) == 0:
-			args = ('git', 'clone', '-q', '-b', branch, cloneSource, repo)
+		# For Git versions <1.9 clone of a shallow repository will fail, so
+		# check the git version and clone the whole repository if it is <1.9
+		gitVersOut = check_output(('git', '--version'), stderr=DEVNULL).decode('utf-8')
+		if gitVersOut[:12] == "git version ":
+			gitVers = LooseVersion(gitVersOut[12:])
+		else:
+			gitVers = LooseVersion("0")
+		if len(dbLog) == 0 or gitVers < LooseVersion("1.9"):
 			depth = None
+			args = ('git', 'clone', '-q', '-b', branch, cloneSource, repo)
 		else:
 			output = output.decode('utf-8')
 			if output[:40] == dbLog[-1].hash:
@@ -66,22 +73,24 @@ class External(Module):
 			depth = 5
 			args = ('git', 'clone', '-q', '--depth', str(depth), '-b', branch, cloneSource, repo)
 
+		lastGitLogLen = 0
 		while True:
-			check_call(args, cwd=repo, stdout=devNull, stderr=devNull)
+			check_call(args, cwd=repo, stdout=DEVNULL, stderr=DEVNULL)
 			try:
-				return self._catchUp(repo, branch, dbLog, source)
-			except NewCommitsNotReachedError:
+				return self._catchUp(repo, branch, dbLog, source, lastGitLogLen)
+			except NewCommitsNotReachedError as e:
 				try:
+					lastGitLogLen = e.gitLogLen
 					depth += 10
 					args = ('git', 'fetch', '--depth', str(depth))
 				except TypeError:
-					return self._catchUp(repo, branch, [], source)
+					return self._catchUp(repo, branch, [], source, lastGitLogLen)
 
-	def _catchUp(self, repo, branch, dbLog, source):
+	def _catchUp(self, repo, branch, dbLog, source, lastGitLogLen):
 		returnCommits = []
 		git = Git(repo)
 		gitLog = git.getLog(branch=branch)
-		if len(dbLog) > 0:
+		if len(dbLog) > 0 and len(gitLog) > lastGitLogLen:
 			lastDbLog = dbLog[-1]
 			reachedNewCommits = False
 		else:
@@ -96,12 +105,12 @@ class External(Module):
 				reachedNewCommits = True
 
 		if not reachedNewCommits:
-			raise NewCommitsNotReachedError()
+			raise NewCommitsNotReachedError(len(gitLog))
 		return returnCommits
 
 
 class SSHEnvironment(object):
-	gitSshUrlPattern = re.compile('^(ssh://)?(?P<user>\w+)@(?P<host>[^:/]+):?(?P<port>\d+)?(:|/)(?P<repositoryPath>.+)$')
+	gitSshUrlPattern = re.compile('^(ssh://)?(?P<user>\w+)@(?P<host>[^:/]+)(:(?P<port>\d+))?(:|/)(?P<repositoryPath>.+)$')
 
 	def __init__(self, source, config):
 		self.source = source
@@ -115,7 +124,6 @@ class SSHEnvironment(object):
 			return None
 
 		self.isSshUrl = True
-		self.sshConfigFileCopied = False
 
 		sshUser = matchObj.group('user')
 		sshHost = matchObj.group('host')
@@ -132,35 +140,109 @@ class SSHEnvironment(object):
 			pass
 		cloneSource = 'ssh://{0}/{1}'.format(tmpHostName, sshRepositoryPath)
 
-		sshConfigDirName = os.path.join(os.environ['HOME'], '.ssh')
-		self.sshConfigFileName = os.path.join(os.environ['HOME'], '.ssh', 'config')
-		if not os.path.exists(sshConfigDirName):
-			os.mkdir(sshConfigDirName, mode=0o700)
-		if os.path.exists(self.sshConfigFileName):
-			self.sshOrigConfigFileName = self.generateOrigConfigFileName(self.sshConfigFileName)
-			shutil.copy(self.sshConfigFileName, self.sshOrigConfigFileName)
-			self.sshConfigFileCopied = True
+		sshConfigDirPath = os.path.join(os.path.expanduser('~'), '.ssh')
+		sshConfigFilePath = os.path.join(sshConfigDirPath, 'config')
+		if not os.path.exists(sshConfigDirPath):
+			os.mkdir(sshConfigDirPath, mode=0o700)
+		if not os.path.exists(sshConfigFilePath):
+			with open(sshConfigFilePath, 'w'):
+				pass
+			os.chmod(sshConfigFilePath, 0o600)
 
-		with open(self.sshConfigFileName, 'a') as sshConfigFileObj:
-			os.chmod(self.sshConfigFileName, 0o600)
+		self.sshOrigConfigFile = TmpOrigFile(sshConfigFilePath, postfix="gitdh")
+		self.sshOrigConfigFile.create()
+
+		with open(sshConfigFilePath, 'a') as sshConfigFileObj:
 			sshConfigFileObj.write(sshConf)
 
 		return cloneSource
 
 	def __exit__(self, type, value, traceback):
 		if self.isSshUrl:
-			if self.sshConfigFileCopied:
-				shutil.move(self.sshOrigConfigFileName, self.sshConfigFileName)
-			else:
-				os.unlink(self.sshConfigFileName)
+			self.sshOrigConfigFile.remove()
 
-	def generateOrigConfigFileName(self, configFilePath):
-		origConfigFileName = configFilePath + '.orig'
-		while os.path.exists(origConfigFileName):
-			origConfigFileName += '_'
-		fObj = open(origConfigFileName, 'w')
-		fObj.close()
-		return origConfigFileName
+class TmpOrigFile(object):
+	def __init__(self, path, postfix="orig"):
+		self.path = path
+		self.dir = os.path.dirname(path)
+		self.postfix = postfix
+		self.base = os.path.basename(path) + "." + postfix + "."
+		self.lockPath = self.path + "." + postfix + ".lock"
+		self.curNum = None
+		self.tmpFilePath = None
+
+	def create(self):
+		with DirLock(self.lockPath, 0.01, 1):
+			confFileNums = self._getFileNums()
+			self.curNum = 1
+			if len(confFileNums) != 0:
+				self.curNum = confFileNums[-1] + 1
+			self.tmpFilePath = os.path.join(self.dir, self.base + str(self.curNum))
+			shutil.copy(self.path, self.tmpFilePath)
+
+	def remove(self):
+		if self.tmpFilePath is None:
+			return
+		with DirLock(self.lockPath, 0.01, 1):
+			confFileNums = self._getFileNums()
+			nextFile = self.path
+			if confFileNums[-1] != self.curNum:
+				nextFile = os.path.join(self.dir, self.base \
+					+ str(confFileNums[confFileNums.index(self.curNum) + 1]))
+			shutil.move(self.tmpFilePath, nextFile)
+			self.tmpFilePath = None
+			self.curNum = None
+
+	def __del__(self):
+		if not self.tmpFilePath is None:
+			self.remove()
+
+	def __enter__(self):
+		self.create()
+
+	def __exit__(self, type, value, traceback):
+		self.remove()
+
+	def _getFileNums(self):
+		base = self.base
+		confFileNums = []
+
+		for f in os.listdir(self.dir):
+			if f[:len(base)] == base:
+				try:
+					confFileNums.append(int(f[len(base):]))
+				except ValueError:
+					pass
+		confFileNums.sort()
+		return confFileNums
+
+class DirLockTimeoutException(Exception):
+	pass
+
+class DirLock(object):
+	def __init__(self, lockDirPath, waitInterval, waitTimeout):
+		self.lockDirPath = lockDirPath
+		self.waitInterval = waitInterval
+		self.waitTimeout = waitTimeout
+
+	def __enter__(self):
+		startedAt = time.time()
+		while True:
+			try:
+				if os.path.exists(self.lockDirPath):
+					raise FileExistsError(self.lockDirPath)
+				os.mkdir(self.lockDirPath)
+				break
+			except FileExistsError:
+				if self.waitTimeout == 0 or time.time() - startedAt < self.waitTimeout:
+					time.sleep(self.waitInterval)
+				else:
+					raise DirLockTimeoutException()
+
+	def __exit__(self, type, value, traceback):
+		os.rmdir(self.lockDirPath)
+		return False
 
 class NewCommitsNotReachedError(Exception):
-	pass
+	def __init__(self, gitLogLen):
+		self.gitLogLen = gitLogLen

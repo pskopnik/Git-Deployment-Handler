@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from gitdh.modules import Module
-import shlex, re, os
+import shlex, re
+from os import walk
 from os.path import join
-from subprocess import check_call, CalledProcessError
+from subprocess import check_call, CalledProcessError, DEVNULL
 from syslog import syslog, LOG_WARNING
 
 CONFIG_SECTION_PATTERNS = {'*-command'}
@@ -72,17 +73,10 @@ class CommandProcessing(Module):
 		return allFiles
 
 	def _executePathCommand(self, command, path, basepath, suppressOutput, shell):
-		command = command.replace('${f}', "'" + path + "'")
-		if shell:
-			if suppressOutput:
-				with open(os.devnull, mode='w') as fd:
-					return check_call(command, cwd=basepath, stdout=fd, stderr=fd, shell=shell)
-			else:
-				return check_call(command, cwd=basepath, shell=shell)
-		else:
+		args = command.replace('${f}', "'" + path.replace("'", "\\'") + "'")
+		if not shell:
 			args = shlex.split(command)
-			if suppressOutput:
-				with open(os.devnull, mode='w') as fd:
-					return check_call(args, cwd=basepath, stdout=fd, stderr=fd, shell=shell)
-			else:
-				return check_call(args, cwd=basepath, shell=shell)
+		if suppressOutput:
+			return check_call(command, cwd=basepath, stdout=DEVNULL, stderr=DEVNULL, shell=shell)
+		else:
+			return check_call(command, cwd=basepath, shell=shell)

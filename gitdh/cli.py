@@ -31,7 +31,7 @@ done
 exit 0
 """
 
-cronContent = """# {0}: Cron file for git-dh
+cronContent = """# {0}: Cron Job file for git-dh
 
 PATH={1}
 MAILTO={2}
@@ -48,8 +48,11 @@ def cron(*target):
 		gitDhMain(t, 'cron', [])
 
 def postreceive(target, oldrev, newrev, refname):
-	del os.environ['GIT_DIR']
-	gitDhMain(target, 'postreceive', [oldrev, newrev, refname])
+	try:
+		del os.environ['GIT_DIR']
+	except KeyError:
+		pass
+	gitDhMain(target, 'postreceive', (oldrev, newrev, refname))
 
 @argh.named('postreceive')
 @argh.arg('--printOnly', '--print', '-p')
@@ -131,26 +134,19 @@ def installCron(name, user=None, printOnly=False, force=False, quiet=False,
 		if not printOnly and not os.access(os.path.dirname(fPath), os.W_OK):
 			raise Exception("Can't write to '%s'" % (fPath,))
 		if not printOnly and os.path.exists(fPath) and not force:
-			raise Exception("'%s' exists already, use --force to overwrite" % (fPath,))
+			raise Exception("'%s' already exists, use --force to overwrite" % (fPath,))
 	except Exception as e:
 		print(e, file=sys.stderr)
 		sys.exit(1)
 
-	cmdStr = 'git-dh cron {0}'
-	cmdOpts = ''
-	first = True
+	cmdStr = 'git-dh cron'
 	for t in target:
-		if first:
-			first = False
-		else:
-			cmdOpts += ' '
-		cmdOpts += quote(os.path.abspath(t))
-	cmdStr = cmdStr.format(cmdOpts)
+		cmdStr += ' ' + quote(os.path.abspath(t))
 	if 'VIRTUAL_ENV' in os.environ:
 		virtEnvPath = os.path.join(os.environ['VIRTUAL_ENV'], 'bin', 'activate')
 		cmdStr = ". %s; %s" % (quote(virtEnvPath), cmdStr)
 		cmdStr = "bash -c %s" % (quote(cmdStr),)
-	if unixPath == None:
+	if unixPath is None:
 		unixPath = os.environ.get('PATH', '')
 	content = cronContent.format(fPath, unixPath, mailto, interval, user, cmdStr)
 

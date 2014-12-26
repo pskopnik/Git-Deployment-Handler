@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import shlex
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output, CalledProcessError, DEVNULL
 import os, re
 
 class Git(object):
@@ -27,8 +27,7 @@ class Git(object):
 		cmd = 'git ' + gitCommand + ' ' + options
 		args = shlex.split(cmd)
 		if suppressStderr:
-			with open(os.devnull, mode='w') as fd:
-				cmdOutput = check_output(args, cwd=repositoryPath, universal_newlines=True, stderr=fd)
+			cmdOutput = check_output(args, cwd=repositoryPath, universal_newlines=True, stderr=DEVNULL)
 			return cmdOutput
 		else:
 			return check_output(args, cwd=repositoryPath, universal_newlines=True)
@@ -36,7 +35,7 @@ class Git(object):
 	def getLog(self, since=None, until=None, branch=None):
 		time = ""
 		commits = []
-		if since != None or until != None:
+		if not since is None or not until is None:
 			if since is None:
 				since = ""
 			if until is None:

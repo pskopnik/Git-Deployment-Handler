@@ -5,7 +5,7 @@ from syslog import syslog, LOG_INFO, LOG_WARNING
 from gitdh.gitdhutils import filterOnStatusExt, deleteDir, deleteDirContent
 import os
 from os.path import abspath, join, exists, isdir, isfile
-from subprocess import check_call, CalledProcessError
+from subprocess import check_call, check_output, CalledProcessError, DEVNULL
 
 class Deployment(Module):
 	def isEnabled(self, action):
@@ -38,16 +38,17 @@ class Deployment(Module):
 
 			confSection = self.config.branches[commit.branch]
 			rmIntGitFiles = confSection.getboolean('RmIntGitFiles', True)
+			recursive = confSection.getboolean('Recursive', True)
 			if not hasattr(commit, 'deploymentSource'):
 				commit.deploymentSource = self.config.repoPath
 			syslog(LOG_INFO, "Deploying commit '%s' from '%s' : '%s' to '%s'" % (commit, commit.repository, commit.branch, confSection['Path']))
 
-			self._deleteUpdateRepo(confSection['Path'], commit.deploymentSource, commit.branch, commit, rmIntGitFiles=rmIntGitFiles)
+			self._deleteUpdateRepo(confSection['Path'], commit.deploymentSource, commit.branch, commit, rmIntGitFiles=rmIntGitFiles, recursive=recursive)
 
 			if not self.dbBe is None:
 				self.dbBe.setStatusFinished(commit)
 
-	def _deleteUpdateRepo(self, path, sourceRepository, branch, commit, rmIntGitFiles=True):
+	def _deleteUpdateRepo(self, path, sourceRepository, branch, commit, rmIntGitFiles=True, recursive=True):
 		path = abspath(path)
 		try:
 			if not exists(path):
@@ -61,25 +62,37 @@ class Deployment(Module):
 			syslog(LOG_WARNING, "OSError while clearing '%s': '%s'" % (path, e))
 			return
 
-		if exists(sourceRepository):
-			args = ('git', 'clone', '-q', '-l', '-s', '-b', branch, 'file://' + sourceRepository, path)
+		if recursive:
+			args = ('git', 'clone', '-q', '--recursive', '-b', branch, sourceRepository, path)
 		else:
 			args = ('git', 'clone', '-q', '-b', branch, sourceRepository, path)
 
-		with open(os.devnull, 'w') as devNull:
-			try:
-				check_call(args, cwd=path, stdout=devNull, stderr=devNull)
-				if not commit is None:
-					args = ('git', 'checkout', commit.hash)
-					check_call(args, cwd=path, stdout=devNull, stderr=devNull)
-					args = ('git', 'reset', '--hard', '-q')
-					check_call(args, cwd=path, stdout=devNull, stderr=devNull)
-				if rmIntGitFiles:
-					self._rmIntGitFiles(path)
-			except CalledProcessError as e:
-				syslog(LOG_WARNING, "Git Error: '%s'" % (e,))
+		try:
+			check_call(args, cwd=path, stdout=DEVNULL, stderr=DEVNULL)
+			if not commit is None:
+				args = ('git', 'checkout', commit.hash)
+				check_call(args, cwd=path, stdout=DEVNULL, stderr=DEVNULL)
+				args = ('git', 'reset', '--hard', '-q')
+				check_call(args, cwd=path, stdout=DEVNULL, stderr=DEVNULL)
+			if rmIntGitFiles:
+				self._rmIntGitFiles(path)
+		except CalledProcessError as e:
+			syslog(LOG_WARNING, "Git Error: '%s'" % (e,))
 
 	def _rmIntGitFiles(self, path):
+		output = check_output(('git', 'submodule', 'status'), cwd=path, stderr=DEVNULL).decode('utf-8')
+		if len(output) != 0:
+			for line in output.strip().split('\n'):
+				try:
+					words = line.strip().split(' ')
+					self._rmIntGitFiles(join(path, words[1]))
+				except IndexError:
+					pass
+		if isdir(join(path, '.git')):
 			deleteDir(join(path, '.git'))
-			if isfile(join(path, '.gitignore')):
-				os.unlink(join(path, '.gitignore'))
+		elif isfile(join(path, '.git')):
+			os.unlink(join(path, '.git'))
+		if isfile(join(path, '.gitignore')):
+			os.unlink(join(path, '.gitignore'))
+		if isfile(join(path, '.gitmodules')):
+			os.unlink(join(path, '.gitmodules'))

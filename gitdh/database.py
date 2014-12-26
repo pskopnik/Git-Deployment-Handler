@@ -72,14 +72,20 @@ class MySQL(DatabaseBackend):
 
 	def setStatus(self, commit, status):
 		commit.status = status
-		if hasattr(commit, 'id') and commit.id != None:
+		if hasattr(commit, 'id') and not commit.id is None:
 			params = (status, commit.id)
 			self.cur.execute('UPDATE `{0}` SET `status`=%s WHERE `id`=%s'.format(self.tableName), params)
 			self.cur.connection.commit()
 
 	def __del__(self):
-		self.cur.close()
-		self.conn.close()
+		try:
+			self.cur.close()
+		except AttributeError:
+			pass
+		try:
+			self.conn.close()
+		except AttributeError:
+			pass
 
 class SQLite(MySQL):
 	def __init__(self, config):
@@ -120,7 +126,7 @@ CREATE TABLE IF NOT EXISTS {0} (
 
 	def setStatus(self, commit, status):
 		commit.status = status
-		if hasattr(commit, 'id') and commit.id != None:
+		if hasattr(commit, 'id') and not commit.id is None:
 			params = (status, commit.id)
 			self.cur.execute('UPDATE `{0}` SET `status`=? WHERE `id`=?'.format(self.tableName), params)
 			self.cur.connection.commit()
@@ -158,7 +164,7 @@ class MongoDB(DatabaseBackend):
 
 	def setStatus(self, commit, status):
 		commit.status = status
-		if hasattr(commit, 'id') and commit.id != None:
+		if hasattr(commit, 'id') and not commit.id is None:
 			self.coll.update({'_id': commit.id}, {'$set': {'status': status}})
 
 	def __del__(self):
