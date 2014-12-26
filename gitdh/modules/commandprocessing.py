@@ -4,8 +4,15 @@ from gitdh.modules import Module
 import shlex, re
 from os import walk
 from os.path import join
-from subprocess import check_call, CalledProcessError, DEVNULL
+from subprocess import check_call, CalledProcessError
 from syslog import syslog, LOG_WARNING
+
+try:
+	from subprocess import DEVNULL
+except ImportError:
+	# < Python 3.3 compatibility
+	from gitdh.gitdhutils import getDevNull
+	DEVNULL = getDevNull()
 
 CONFIG_SECTION_PATTERNS = {'*-command'}
 

@@ -4,10 +4,17 @@ from gitdh.modules import Module
 from gitdh.git import Git
 from gitdh.gitdhutils import filterOnStatusBase, filterOnSource, mInsertCommit, generateRandomString
 from tempfile import TemporaryDirectory
-from subprocess import check_call, check_output, CalledProcessError, DEVNULL
+from subprocess import check_call, check_output, CalledProcessError
 from syslog import syslog, LOG_WARNING
 from distutils.version import LooseVersion
 import re, os, shutil, time
+
+try:
+	from subprocess import DEVNULL
+except ImportError:
+	# < Python 3.3 compatibility
+	from gitdh.gitdhutils import getDevNull
+	DEVNULL = getDevNull()
 
 class External(Module):
 	def __init__(self, config, args, dbBe):
@@ -143,7 +150,11 @@ class SSHEnvironment(object):
 		sshConfigDirPath = os.path.join(os.path.expanduser('~'), '.ssh')
 		sshConfigFilePath = os.path.join(sshConfigDirPath, 'config')
 		if not os.path.exists(sshConfigDirPath):
-			os.mkdir(sshConfigDirPath, mode=0o700)
+			try:
+				os.mkdir(sshConfigDirPath, mode=0o700)
+			except TypeError:
+				# < Python 3.3 compatibility
+				os.mkdir(sshConfigDirPath, 0o700)
 		if not os.path.exists(sshConfigFilePath):
 			with open(sshConfigFilePath, 'w'):
 				pass

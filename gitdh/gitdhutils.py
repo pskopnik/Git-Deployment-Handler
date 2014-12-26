@@ -2,6 +2,14 @@
 
 import os, string, random
 
+_devNull = None
+
+def getDevNull():
+	global _devNull
+	if _devNull is None:
+		_devNull = open(os.devnull, 'wb')
+	return _devNull
+
 def deleteDirContent(dir):
 	for file in os.listdir(dir):
 		file_path = os.path.join(dir, file)

@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
 import shlex
-from subprocess import check_output, CalledProcessError, DEVNULL
+from subprocess import check_output, CalledProcessError
 import os, re
+
+try:
+	from subprocess import DEVNULL
+except ImportError:
+	# < Python 3.3 compatibility
+	from gitdh.gitdhutils import getDevNull
+	DEVNULL = getDevNull()
 
 class Git(object):
 	branchPattern = re.compile(r"[\*\s]\s(\S+)$", re.MULTILINE)

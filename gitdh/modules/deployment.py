@@ -5,7 +5,14 @@ from syslog import syslog, LOG_INFO, LOG_WARNING
 from gitdh.gitdhutils import filterOnStatusExt, deleteDir, deleteDirContent
 import os
 from os.path import abspath, join, exists, isdir, isfile
-from subprocess import check_call, check_output, CalledProcessError, DEVNULL
+from subprocess import check_call, check_output, CalledProcessError
+
+try:
+	from subprocess import DEVNULL
+except ImportError:
+	# < Python 3.3 compatibility
+	from gitdh.gitdhutils import getDevNull
+	DEVNULL = getDevNull()
 
 class Deployment(Module):
 	def isEnabled(self, action):
