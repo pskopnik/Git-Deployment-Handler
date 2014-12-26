@@ -27,14 +27,3 @@ external_queued
 external_working
 external_skipped
 external_finished
-
-##Old statuses:
-
-1 - Call for Approval Pending
-2 - Approved, Commit Deployment Queued
-3 - Approved, Commit Deployment Working
-4 - Approved, Commit Deployment Finished
-5 - Cron Deployment, Commit Deployment Queued
-6 - Cron Deplyoment, Commit Deployment Working
-7 - Cron Deployment, Commit Deployment Finished
-8 - Database Log

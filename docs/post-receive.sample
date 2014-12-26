@@ -1,0 +1,12 @@
+#!/bin/sh
+
+configFile='/opt/gitdh/webapp.conf'
+# # When using a virtual env
+#. /opt/gitdh/env/bin/activate
+
+while read oldrev newrev refname
+do
+	git-dh postreceive $configFile $oldrev $newrev $refname
+done
+
+exit 0

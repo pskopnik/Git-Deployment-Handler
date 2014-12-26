@@ -1,0 +1,10 @@
+# /etc/cron.d/gitdh: Cron Job file for git-dh
+
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# # When using a virtual env
+# PATH=/opt/gitdh/env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=root
+
+*/5 * * * *    www-data    git-dh cron /opt/gitdh/montools.conf /opt/gitdh/webapp.conf
+# # When using a virtual env
+# */5 * * * *    www-data    bash -c '. /opt/gitdh/env/bin/activate; git-dh cron /opt/gitdh/montools.conf /opt/gitdh/webapp.conf'
