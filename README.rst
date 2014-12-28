@@ -38,6 +38,50 @@ Or manually install from source:
 
     # python3 setup.py install
 
+Getting Started
+---------------
+
+In this example the ``master`` branch of a local repository (hosted
+using gitolite) is deployed to a webserver directory using a
+post-receive hook.
+
+gitdh requires a configuration using INI syntax file for every
+repository whose branches are to be deployed. The path to the repository
+has to be in the ``RepositoryPath`` option of the ``Git`` section. The
+branch to be deployed must have its own section in the configuration
+file with a ``Path`` option being the directory the branch is to be
+deployed to.
+
+So to deploy the ``/var/lib/gitolite/repositories/website.git`` to
+``/home/www/website``, the following is put into
+``/var/lib/gitolite/gitdh-website.conf``:
+
+::
+
+    [Git]
+    RepositoryPath = /var/lib/gitolite/repositories/website.git
+
+    [master]
+    Path = /home/www/website
+
+The post-receive hooks is installed using the following command, it is
+also necessary to give the ``gitolite`` user write access to the
+deployment directory.
+
+::
+
+    # mkdir -p /home/www/website
+    # chown gitolite:www-data /home/www/website
+    # chmod g+rwx /home/www/website
+    # git-dh install postreceive /var/lib/gitolite/gitdh-website.conf
+
+From now on gitdh will deploy all new commits pushed to the ``website``
+repository to the ``/home/www/website`` directory.
+
+Also check the ``docs/``
+(`Github <https://github.com/seoester/Git-Deployment-Handler/tree/master/docs>`__)
+directory for sample configuration files.
+
 Configuration
 -------------
 
