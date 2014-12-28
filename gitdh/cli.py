@@ -1,4 +1,4 @@
-import argh, os, sys
+import argh, os, pwd, sys
 from gitdh.gitdh import gitDhMain
 from gitdh.config import Config
 
@@ -40,14 +40,21 @@ MAILTO={2}
 """
 
 
+@argh.arg('target', nargs="+", help="A configuration file or a repository for which to perform cron job operations")
 def cron(*target):
+	"Process cron job operations"
 	if len(target) == 0:
 		print("Please provide at least one target, for more info call with -h", file=sys.stderr)
 		sys.exit(1)
 	for t in target:
 		gitDhMain(t, 'cron', [])
 
+@argh.arg('target', help="The configuration file for which to process post-receive information")
+@argh.arg('oldrev', help="The oldrev as passed in by git")
+@argh.arg('newrev', help="The newrev as passed in by git")
+@argh.arg('refname', help="The refname as passed in by git")
 def postreceive(target, oldrev, newrev, refname):
+	"Process postreceive operations"
 	try:
 		del os.environ['GIT_DIR']
 	except KeyError:
@@ -55,11 +62,13 @@ def postreceive(target, oldrev, newrev, refname):
 	gitDhMain(target, 'postreceive', (oldrev, newrev, refname))
 
 @argh.named('postreceive')
-@argh.arg('--printOnly', '--print', '-p')
-@argh.arg('--force', '-f')
-@argh.arg('--quiet', '-q')
-@argh.arg('--mode')
+@argh.arg('target', nargs="+", help="A configuration file or a repository for which post-receive hooks are to be created")
+@argh.arg('--printOnly', '--print', '-p', help="Only print the files' content")
+@argh.arg('--force', '-f', help="Overwrite existing files")
+@argh.arg('--quiet', '-q', help="Only print errors, no status information")
+@argh.arg('--mode', '-m', help="The mode of the created files (file permissions / bits)")
 def installPostreceive(printOnly=False, force=False, quiet=False, mode='755', *target):
+	"Install post-receive hooks"
 	if force and printOnly:
 		print("Invalid options: --printOnly and --force both set", file=sys.stderr)
 		sys.exit(1)
@@ -107,16 +116,19 @@ def installPostreceive(printOnly=False, force=False, quiet=False, mode='755', *t
 				sys.exit(1)
 
 @argh.named('cron')
-@argh.arg('name', help="Name of the cron job file to be placed into /etc/cron.d")
-@argh.arg('--user', '-u')
-@argh.arg('--printOnly', '--print', '-p')
-@argh.arg('--force', '-f')
-@argh.arg('--quiet', '-q')
-@argh.arg('--mailto')
-@argh.arg('--unixPath', '--path')
-@argh.arg('--interval', '-i')
+@argh.arg('name', help="Name of the cron job file to be placed in /etc/cron.d")
+@argh.arg('target', nargs="+", help="A configuration file or a repository to be included in the cron job")
+@argh.arg('--user', '-u', help="The user to execute gitdh under in the cron job; If none it defaults to the current user")
+@argh.arg('--printOnly', '--print', '-p', help="Only print the file content")
+@argh.arg('--force', '-f', help="Overwrite an existing file")
+@argh.arg('--quiet', '-q', help="Only print errors, no status information")
+@argh.arg('--mailto', help="The MAILTO to be written to the cron job file")
+@argh.arg('--unixPath', '--path', help="The PATH to be written to the cron job file; If None it defaults to the current PATH")
+@argh.arg('--interval', '-i', help="The interval with which the cron job is to be executed")
+@argh.arg('--mode', '-m', help="The mode of the created cron job file (file permissions / bits)")
 def installCron(name, user=None, printOnly=False, force=False, quiet=False,
 				mailto='root', unixPath=None, interval='*/5 * * * *', mode='644', *target):
+	"Install a cron job in /etc/conf.d"
 	if force and printOnly:
 		print("Invalid options: --printOnly and --force both set", file=sys.stderr)
 		sys.exit(1)
@@ -125,7 +137,7 @@ def installCron(name, user=None, printOnly=False, force=False, quiet=False,
 		sys.exit(1)
 
 	if user is None:
-		user = os.getlogin()
+		user = pwd.getpwuid(os.getuid())[0]
 
 	fPath = os.path.join('/etc/cron.d', name)
 	try:
@@ -168,9 +180,9 @@ def installCron(name, user=None, printOnly=False, force=False, quiet=False,
 			sys.exit(1)
 
 
-parser = argh.ArghParser()
+parser = argh.ArghParser(description="Tool to automatically deploy git commits using post-receive hooks and cron jobs")
 parser.add_commands([cron, postreceive])
-parser.add_commands([installPostreceive, installCron], namespace="install")
+parser.add_commands([installPostreceive, installCron], help="Commands installing files to automatically perform operations", namespace="install")
 
 def main():
 	parser.dispatch()

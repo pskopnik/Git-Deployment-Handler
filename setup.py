@@ -13,8 +13,8 @@ if sys.version_info < (3,3):
 
 setup(
 		name = 'gitdh',
-		version = '0.7.1',
-		description = 'A python tool to deploy git commits using post-receive hooks and cron',
+		version = '0.7.2.dev1',
+		description = 'Tool to automatically deploy git commits using post-receive hooks and cron jobs',
 		long_description = long_description,
 		author = 'Seoester',
 		author_email = 'seoester@googlemail.com',

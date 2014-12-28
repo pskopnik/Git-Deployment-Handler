@@ -19,6 +19,7 @@ The Git Deployment Handler uses post-receive hooks and cron jobs (services in fu
 
 The easiest way to install [gitdh](https://pypi.python.org/pypi/gitdh/) is to use the [Python Package Index](https://pypi.python.org/pypi):
 
+	# # It is necessary to use python3, so instead of pip, pip3 or pip-3.2, ... might have to be used
 	# pip install gitdh
 
 Or manually install from source:
@@ -55,7 +56,7 @@ Additional Options:
 
  * `RmGitIntFiles` - `True` or `False`, whether internal git files should be deleted (`.git/`, `.gitignore`, `.gitmodules`); default `True`
  * `Recursive` - `True` or `False`, whether a clone should be `recursive`, i.e. submodules should be cloned out as well; default `True`
- * `DatabaseLog` - `True` or `False`, whether every commit should be logged to the database; default `False`
+ * `DatabaseLog` - `True` or `False`, whether every commit should be logged to the database; (requires a database); default `False`
  * `CronDeployment` - `True` or `False`, whether every commit should be inserted into the database and deployed by cron job instead of being deploying directly; (requires a database); default `False`
  * `Approval` - `True` or `False`, whether every commit has to be first approved in the database and is then deployed by cron job; (requires a database); default `False`
  * `Preprocessing` - space separated list of commands to be performed before deploying any commits; default `` (empty)
@@ -164,13 +165,14 @@ The command by default doesn't overwrite any files, aborts on error and prints a
 
 Additional arguments:
 
- * `--user` - The user to execute gitdh under; default: the current user
+ * `--user` - The user to execute gitdh under in the cron job; default: the current user
  * `--interval` - The interval with which the cron job is to be executed; default `*/5 * * * *`
  * `--unixPath` - The `PATH` to be written to the cron job file; default: the current path
+ * `--mailto` - The `MAILTO` to be written to the cron job file; default root
  * `--printOnly` - Only print the file content, don't write any files
  * `--force` - Overwrite existing files
  * `--quiet` - Only print errors
- * `--mode` - The mode of the created file; default 644
+ * `--mode` - The mode of the created cron job file; default 644
 
 For more information see `git-dh install cron --help`.
 

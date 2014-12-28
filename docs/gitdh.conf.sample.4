@@ -5,6 +5,8 @@
 # Internal git files, i.e. the .git/ directory, ..., are not removed after
 # deployment so it will be possible to inspect code changes manually at
 # any point in time.
+# After deploying commits, `etckeeper commit` is run to commit all changes
+# of files to the /etc directory caused by the git-dh deployment.
 #
 # Install post-receive hook with `git-dh install postreceive CONFFILE`
 # Install cron job with `git-dh install cron CRONJOBNAME CONFFILE`
@@ -25,3 +27,8 @@ Collection = commits
 Path = /etc/puppet/modules/backup
 RmGitIntFiles = False
 CronDeployment = True
+Postprocessing = etckeeper-commit
+
+[etckeeper-commit-command]
+Mode = once
+Command = etckeeper commit "Committing after git-dh run for puppet-backup"
