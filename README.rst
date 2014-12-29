@@ -52,8 +52,8 @@ branch to be deployed must have its own section in the configuration
 file with a ``Path`` option being the directory the branch is to be
 deployed to.
 
-So to deploy the ``/var/lib/gitolite/repositories/website.git`` to
-``/home/www/website``, the following is put into
+So to deploy the ``/var/lib/gitolite/repositories/website.git``
+repository to ``/home/www/website``, the following is put into
 ``/var/lib/gitolite/gitdh-website.conf``:
 
 ::
@@ -72,7 +72,7 @@ deployment directory.
 
     # mkdir -p /home/www/website
     # chown gitolite:www-data /home/www/website
-    # chmod g+rwx /home/www/website
+    # chmod g+rx /home/www/website
     # git-dh install postreceive /var/lib/gitolite/gitdh-website.conf
 
 From now on gitdh will deploy all new commits pushed to the ``website``

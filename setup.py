@@ -20,7 +20,7 @@ setup(
 		author_email = 'seoester@googlemail.com',
 		license = 'MIT',
 		url = 'https://github.com/seoester/Git-Deployment-Handler',
-		provides = ['argh'],
+		provides = ['gitdh'],
 		packages = ['gitdh', 'gitdh.modules'],
 		install_requires = [
 			"argh>=0.25"

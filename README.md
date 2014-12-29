@@ -34,7 +34,7 @@ gitdh requires a configuration using INI syntax file for every repository whose 
 The path to the repository has to be in the `RepositoryPath` option of the `Git` section.
 The branch to be deployed must have its own section in the configuration file with a `Path` option being the directory the branch is to be deployed to.
 
-So to deploy the `/var/lib/gitolite/repositories/website.git` to `/home/www/website`, the following is put into `/var/lib/gitolite/gitdh-website.conf`:
+So to deploy the `/var/lib/gitolite/repositories/website.git` repository to `/home/www/website`, the following is put into `/var/lib/gitolite/gitdh-website.conf`:
 
 	[Git]
 	RepositoryPath = /var/lib/gitolite/repositories/website.git
@@ -46,7 +46,7 @@ The post-receive hooks is installed using the following command, it is also nece
 
 	# mkdir -p /home/www/website
 	# chown gitolite:www-data /home/www/website
-	# chmod g+rwx /home/www/website
+	# chmod g+rx /home/www/website
 	# git-dh install postreceive /var/lib/gitolite/gitdh-website.conf
 
 From now on gitdh will deploy all new commits pushed to the `website` repository to the `/home/www/website` directory.
