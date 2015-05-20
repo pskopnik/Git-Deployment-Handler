@@ -230,6 +230,10 @@ class TmpOrigFile(object):
 class DirLockTimeoutException(Exception):
 	pass
 
+class FileExistsError(Exception):
+	def __init__(self, path):
+		self.path = path
+
 class DirLock(object):
 	def __init__(self, lockDirPath, waitInterval, waitTimeout):
 		self.lockDirPath = lockDirPath
