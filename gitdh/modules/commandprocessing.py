@@ -47,7 +47,7 @@ class CommandProcessing(Module):
 			return
 
 		confSect = self.config[command + '-command']
-		configMode = confSect.get('Mode', 'once')
+		configMode = confSect.get('Mode', 'once').lower()
 		suppressOutput = confSect.getboolean('SuppressOutput', True)
 		shell = confSect.getboolean('Shell', False)
 		if configMode == 'once':
@@ -57,10 +57,12 @@ class CommandProcessing(Module):
 			files = self._getFiles(path, regExpStmt=regExpStmt)
 			for file in files:
 				self._executePathCommand(confSect['Command'], file, path, suppressOutput, shell)
+		else:
+			syslog(LOG_WARNING, "Encountered unknown command mode '%s' while running command '%s' on '%s'" % (configMode, command, path))
 
 	def _getFiles(self, path, regExpStmt=None):
 		checkRegExp = False
-		if not regExpStmt is None:
+		if regExpStmt is not None:
 			checkRegExp = True
 			if regExpStmt in self._regExpCache:
 				regExp = self._regExpCache[regExpStmt]
@@ -69,7 +71,7 @@ class CommandProcessing(Module):
 				self._regExpCache[regExpStmt] = regExp
 
 		allFiles = []
-		for root, dirs, files in os.walk(path, topdown=True):
+		for root, dirs, files in walk(path, topdown=True):
 			dirs[:] = [d for d in dirs if not d == '.git']
 			for f in files:
 				if f[:4] == '.git':
@@ -82,7 +84,7 @@ class CommandProcessing(Module):
 	def _executePathCommand(self, command, path, basepath, suppressOutput, shell):
 		args = command.replace('${f}', "'" + path.replace("'", "\\'") + "'")
 		if not shell:
-			args = shlex.split(command)
+			args = shlex.split(args)
 		if suppressOutput:
 			return check_call(command, cwd=basepath, stdout=DEVNULL, stderr=DEVNULL, shell=shell)
 		else:
