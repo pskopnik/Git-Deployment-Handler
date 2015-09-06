@@ -86,6 +86,6 @@ class CommandProcessing(Module):
 		if not shell:
 			args = shlex.split(args)
 		if suppressOutput:
-			return check_call(command, cwd=basepath, stdout=DEVNULL, stderr=DEVNULL, shell=shell)
+			return check_call(args, cwd=basepath, stdout=DEVNULL, stderr=DEVNULL, shell=shell)
 		else:
-			return check_call(command, cwd=basepath, shell=shell)
+			return check_call(args, cwd=basepath, shell=shell)
