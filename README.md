@@ -6,7 +6,7 @@ The Git Deployment Handler is a tool for automatic deployment of git commits fro
 Some advanced features require a database; SQlite, MongoDb and MySQL are the supported database backends.
 The Git Deployment Handler uses post-receive hooks and cron jobs (services in future) to automatically deploy commits.
 
-##Requirements
+## Requirements
 
  * python3
  * git (command line tool)
@@ -15,7 +15,7 @@ The Git Deployment Handler uses post-receive hooks and cron jobs (services in fu
 	* mysql and PyMySQL
 	* mongodb and pymongo
 
-##Installation
+## Installation
 
 The easiest way to install [gitdh](https://pypi.python.org/pypi/gitdh/) is to use the [Python Package Index](https://pypi.python.org/pypi):
 
@@ -26,7 +26,7 @@ Or manually install from source:
 
 	# python3 setup.py install
 
-##Getting Started
+## Getting Started
 
 In this example the `master` branch of a local repository (hosted using gitolite) is deployed to a webserver directory using a post-receive hook.
 
@@ -53,7 +53,7 @@ From now on gitdh will deploy all new commits pushed to the `website` repository
 
 Also check the `docs/` ([Github](https://github.com/seoester/Git-Deployment-Handler/tree/master/docs)) directory for sample configuration files.
 
-##Configuration
+## Configuration
 
 gitdh is configured using a config file in INI syntax.
 
@@ -72,7 +72,7 @@ Additional Options:
  * `External` - `True` or `False`, whether the Source is an external (i.e. remote) repository; (requires a database); default `False`
  * `IdentityFile` - May contain the path of an IdentityFile (as in .ssh/config) when External is used and Source is a SSH URL; default `None`
 
-###Branches
+### Branches
 
 For every branch which should be deployed, a section named like the branch has to be created. The `Path` setting specifies the path to be deployed to:
 
@@ -89,7 +89,7 @@ Additional Options:
  * `Preprocessing` - space separated list of commands to be performed before deploying any commits; default `` (empty)
  * `Postprocessing` - space separated list of commands to be performed after deploying all commits; default `` (empty)
 
-###Database
+### Database
 
 To be able to utilise a database, a `Database` section is required.
 The `Engine` setting in the `Database` section specified the database backend (must be `sqlite`, `mongodb` or `mysql`).
@@ -122,7 +122,7 @@ Each database backend has its own further options:
 	DatabaseFile = /var/lib/gitolite/data.sqlite
 	Table = commits
 
-###Commands
+### Commands
 
 Commands used for `Preprocessing` and `Postprocessing` are stored in additional sections in the config file.
 The section name is the name of the command with trailing `-command`.
@@ -147,7 +147,7 @@ Additional Options:
  * `Shell` - `True` or `False`, whether a shell should be used to execute the command; default `False`
  * `SuppressOutput` - `True` or `False`, whether output from the command should be surpressed, whether ; default `True`
 
-##Setup
+## Setup
 
 In order to deploy commits automatically, gitdh has to be installed as a git post-receive hook and / or a cron job.
 Post-receive hooks require a local "git server" (e.g. [gitolite](http://gitolite.com/)) commits are pushed to.
@@ -155,7 +155,7 @@ Cron Jobs have to be created to use advanced features, e.g. deploy commits from 
 
 The `git-dh install` command helps creating these files.
 
-###`postreceive` Setup
+### `postreceive` Setup
 
 The `git-dh install postreceive` command will assist on creating git post-receive hooks.
 
@@ -178,7 +178,7 @@ For more information see `git-dh install postreceive --help`.
 
 A sample post-receive file can be found in `docs/post-receive.sample`
 
-###`cron` Setup
+### `cron` Setup
 
 The `git-dh install cron` command will assist on creating cron job files in `/etc/cron.d/`.
 
@@ -205,6 +205,6 @@ For more information see `git-dh install cron --help`.
 
 A sample cron job file can be found in `docs/cronjob.sample`
 
-##Issues / Contributing
+## Issues / Contributing
 
 Please use the [Git-Deployment-Handler Github Repository](https://github.com/seoester/Git-Deployment-Handler) to submit issues or contribute.
