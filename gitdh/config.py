@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from gitdh import git, module
-from collections import Mapping
+from collections.abc import Mapping
 from configparser import ConfigParser
 import os.path
 
